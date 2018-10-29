@@ -48,7 +48,7 @@
     ]
   },
   "dependencies": {
-    "canvas-mass": "^1.0.1-alpha.8",
+    "canvas-mass": "^1.0.1-alpha.9",
     "invariant": "^2.2.4"
   }
 }

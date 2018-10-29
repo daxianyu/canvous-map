@@ -4,15 +4,19 @@ import {
 } from '../utils/utils';
 const invariant = require('invariant')
 
-export default class MassMarksDrawer {
+const tolerancePx = 2
 
-  constructor(map, options) {
+
+export default class MassMarksDrawer {
+  constructor(map, options, events = {
+    onClick: null
+  }) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     invariant(map, 'map is required')
     invariant(Array.isArray(options.points), 'points must be array')
-
-    this.options = {...options}
+    this.events = {...events};
+    this.options = {...options};
     this.map = map
     this.canvas = canvas;
     // extract globally to avoid recalculation
@@ -23,6 +27,8 @@ export default class MassMarksDrawer {
     // stop rendering when dragging for it will cause disturbance
     map.on('dragging', this.listenDragging, this);
     map.on('dragend', this.listenDragEnd, this);
+    map.on('click', this.listenClick, this)
+    map.on('mousemove', this.listenMouseMove, this)
   }
 
   setOption(options) {
@@ -51,9 +57,16 @@ export default class MassMarksDrawer {
     }
   }
 
+  setEvents(events) {
+    const lastEvents= {...this.events}
+    this.events = {...lastEvents, ...events}
+  }
+
   destory() {
     this.map.off('dragging', this.listenDragging, this);
     this.map.off('dragend', this.listenDragEnd, this);
+    this.map.off('click', this.listenClick, this)
+    this.map.off('mousemove', this.listenMouseMove, this)
   }
 
   listenDragging() {
@@ -62,6 +75,35 @@ export default class MassMarksDrawer {
 
   listenDragEnd() {
     this.pointRender.start();
+  }
+
+  listenClick(point) {
+    if(!this.events.onClick) return;
+    const nearest = this.getNearestPoint(point)
+    if(nearest) {
+      this.events.onClick(nearest)
+    }
+  }
+
+  listenMouseMove(point) {
+    const nearest = this.getNearestPoint(point)
+    const container = this.map.getContainer()
+    if(nearest) {
+      container.style.cursor = 'pointer';
+    } else {
+      delete container.style.cursor;
+    }
+  }
+
+  getNearestPoint(point) {
+    const { lnglat, pixel } = point
+    let nearestPoint = this.pointRender.getNearest({x: lnglat.lng, y: lnglat.lat}, 1, 1)
+    if(!nearestPoint.length) return
+    nearestPoint = nearestPoint[0][0]
+    const { x, y } = convertToXy(this.map, {lng: nearestPoint.x, lat: nearestPoint.y})
+    if(((pixel.x - x) ** 2 + (pixel.y - y) ** 2) ** 0.5 < (this.pointRadius + tolerancePx)) {
+      return nearestPoint
+    }
   }
 
   /** re init renderer */
