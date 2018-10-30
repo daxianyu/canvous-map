@@ -15,16 +15,8 @@ export function convertToXy(map, sourcePoint) {
   return map.lngLatToContainer(reUseAbleLngLat);
 }
 
-export function convertXyWidthToLngLatWidth(map, center, zoom) {
-  const Pixel = window.AMap.Pixel;
-  const lnglatTopLeft = map.pixelToLngLat(new Pixel(0, 0), zoom);
-  const lnglatCenter = map.pixelToLngLat(new Pixel(center.x, center.y), zoom);
-  return (
-    (lnglatCenter.lng - lnglatTopLeft.lng) ** 2 + (lnglatCenter.lat - lnglatTopLeft.lat)
-  ) ** 0.5;
-}
-
-export function convertDistanceToXy(distance, zoom) {
-  const scale = 20 - zoom;
-  return distance / parseInt(2 ** scale, 10);
+export function getDistance(p1, p2){
+  const { lat:lat01, lng:lng01 } = p1
+  const { lat:lat02, lng:lng02 } = p2
+  return window.AMap.GeometryUtil.distance([lng01, lat01], [lng02, lat02])
 }

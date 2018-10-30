@@ -1,11 +1,8 @@
 import { MassMarks as MassMarks2D } from 'canvas-mass';
 import {
-  convertDistanceToXy, convertToXy, convertXyWidthToLngLatWidth
+  convertToXy, getDistance
 } from '../utils/utils';
 const invariant = require('invariant')
-
-const tolerancePx = 2
-
 
 export default class MassMarksDrawer {
   constructor(map, options, events = {
@@ -27,15 +24,15 @@ export default class MassMarksDrawer {
     // stop rendering when dragging for it will cause disturbance
     map.on('dragging', this.listenDragging, this);
     map.on('dragend', this.listenDragEnd, this);
-    map.on('click', this.listenClick, this)
-    map.on('mousemove', this.listenMouseMove, this)
+    map.on('click', this.listenClick, this);
+    map.on('mousemove', this.listenMouseMove, this);
   }
 
   setOption(options) {
-    const { layer, points, radius = 1, speed, useKd } = options
-    const lastOptions = this.options
-    this.options = {...this.options, ...options}
-    const { ctx, canvas } = this
+    const { layer, points, radius = 1, speed, useKd } = options;
+    const lastOptions = this.options;
+    this.options = {...this.options, ...options};
+    const { ctx, canvas } = this;
     if (points !== lastOptions.points ||
       (useKd !== lastOptions.useKd)
     ) {
@@ -52,7 +49,7 @@ export default class MassMarksDrawer {
       this.pointRender.restart();
     } else if (radius !== lastOptions.radius) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this.pointRadius = Math.ceil(convertDistanceToXy(Number(radius), this.zoom));
+      this.pointRadius = radius / this.map.getResolution()
       this.pointRender.restart();
     }
   }
@@ -62,7 +59,7 @@ export default class MassMarksDrawer {
     this.events = {...lastEvents, ...events}
   }
 
-  destory() {
+  destroy() {
     this.map.off('dragging', this.listenDragging, this);
     this.map.off('dragend', this.listenDragEnd, this);
     this.map.off('click', this.listenClick, this)
@@ -96,14 +93,11 @@ export default class MassMarksDrawer {
   }
 
   getNearestPoint(point) {
-    const { lnglat, pixel } = point
-    let nearestPoint = this.pointRender.getNearest({x: lnglat.lng, y: lnglat.lat}, 1, 1)
+    const { lnglat } = point
+    let nearestPoint = this.pointRender.getNearest(lnglat, this.options.radius, 1)
     if(!nearestPoint.length) return
     nearestPoint = nearestPoint[0][0]
-    const { x, y } = convertToXy(this.map, {lng: nearestPoint.x, lat: nearestPoint.y})
-    if(((pixel.x - x) ** 2 + (pixel.y - y) ** 2) ** 0.5 < (this.pointRadius + tolerancePx)) {
-      return nearestPoint
-    }
+    return nearestPoint
   }
 
   /** re init renderer */
@@ -120,10 +114,7 @@ export default class MassMarksDrawer {
 
     AMap.plugin('AMap.CustomLayer', () => {
       this.pointRender = new MassMarks2D(points, (point) => {
-        const { x, y } = convertToXy(map, {
-          lng: point.x,
-          lat: point.y,
-        });
+        const { x, y } = convertToXy(map, point);
         ctx.beginPath();
         ctx.arc(x, y, this.pointRadius, 0, 2 * Math.PI);
         ctx.fill();
@@ -132,6 +123,8 @@ export default class MassMarksDrawer {
         speed,
         useKd,
         layer,
+        distance: getDistance,
+        dimension: ['lat', 'lng']
       });
 
       if (!customLayer) {
@@ -149,25 +142,16 @@ export default class MassMarksDrawer {
        * */
       customLayer.render = ({ size, W }) => {
         const { height, width } = size;
-        const { zoom, sh } = W;
-        const { lng, lat } = sh;
+        const { zoom } = W;
         this.zoom = zoom;
         const { radius, fillColor = 'black' } = this.options
         // Int renders faster than float
-        this.pointRadius = Math.ceil(convertDistanceToXy(Number(radius), zoom));
+        this.pointRadius = radius / this.map.getResolution()
         canvas.width = width;
         canvas.height = height;
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = fillColor;
-        if (zoom > 13) {
-          // render points in range of lngLatWidth
-          const lngLatWidth = convertXyWidthToLngLatWidth(
-            map, { x: width / 2, y: height / 2 }, zoom,
-          );
-          this.pointRender.lookUp({ x: lng, y: lat }, lngLatWidth);
-        } else {
-          this.pointRender.restartMain();
-        }
+        this.pointRender.restartMain();
       };
     });
   }
