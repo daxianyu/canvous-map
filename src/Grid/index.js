@@ -1,15 +1,14 @@
 import { Grid as CanvasGrid } from 'canvas-mass';
 
-function lngLatToXy(AMap, map, position) {
+function lngLatToXy(map, position) {
   const { lng, lat } = position;
-  const lngLat = new AMap.LngLat(lng, lat);
+  const lngLat = new window.AMap.LngLat(lng, lat);
   return map.lngLatToContainer(lngLat);
 }
 
 export default class Grid {
   constructor(options) {
     const {
-      AMap,
       data,
       height = 0,
       map,
@@ -27,9 +26,9 @@ export default class Grid {
     /* Create a layer who understands how to draw grids on canvas context. */
     this.layer = new CanvasGrid(this.ctx, useCache);
     /* Inject CustomLayer plugin. */
-    AMap.plugin('AMap.CustomLayer', () => {
+    window.AMap.plugin('AMap.CustomLayer', () => {
       /* Create AMap custom layer with our canvas. */
-      const customLayer = new AMap.CustomLayer(this.canvas, {
+      const customLayer = new window.AMap.CustomLayer(this.canvas, {
         opacity,
         zooms,
         zIndex,
@@ -46,8 +45,8 @@ export default class Grid {
             ...grid,
             /* Transform bound position from lng lat to canvas pixel. */
             bounds: {
-              bottomLeft: lngLatToXy(AMap, map, grid.bounds.bottomLeft),
-              topRight: lngLatToXy(AMap, map, grid.bounds.topRight),
+              bottomLeft: lngLatToXy(map, grid.bounds.bottomLeft),
+              topRight: lngLatToXy(map, grid.bounds.topRight),
             },
           };
         });
