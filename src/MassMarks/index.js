@@ -29,7 +29,7 @@ export default class MassMarksDrawer {
   }
 
   setOption(options) {
-    const { layer, points, radius = 1, speed, useKd } = options;
+    const { layer, points, radius = 1, speed, useKd, isFixedRadius=false } = options;
     const lastOptions = this.options;
     this.options = {...this.options, ...options};
     const { ctx, canvas } = this;
@@ -49,7 +49,11 @@ export default class MassMarksDrawer {
       this.pointRender.restart();
     } else if (radius !== lastOptions.radius) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this.pointRadius = radius / this.map.getResolution()
+      if(isFixedRadius) {
+        this.pointRadius = radius
+      } else {
+        this.pointRadius = radius / this.map.getResolution()
+      }
       this.pointRender.restart();
     }
   }
@@ -105,7 +109,7 @@ export default class MassMarksDrawer {
     const AMap = window.AMap;
     const { map, canvas, ctx, options } = this;
     let { customLayer } = this;
-    const { speed, useKd = false, layer, points = [] } = options;
+    const { speed, useKd = false, layer, points = [], isFixedRadius } = options;
 
     // will unMount last MassRender
     if (this.pointRender) {
@@ -123,8 +127,8 @@ export default class MassMarksDrawer {
         speed,
         useKd,
         layer,
-        distance: getDistance,
-        dimension: ['lat', 'lng']
+        distance: isFixedRadius? undefined: getDistance,
+        dimension: isFixedRadius? undefined: ['lat', 'lng']
       });
 
       if (!customLayer) {
@@ -144,9 +148,13 @@ export default class MassMarksDrawer {
         const { height, width } = size;
         const { zoom } = W;
         this.zoom = zoom;
-        const { radius, fillColor = 'black' } = this.options
+        const { radius, fillColor = 'black', isFixedRadius } = this.options
         // Int renders faster than float
-        this.pointRadius = radius / this.map.getResolution()
+        if (isFixedRadius) {
+          this.pointRadius = radius;
+        } else {
+          this.pointRadius = radius / this.map.getResolution();
+        }
         canvas.width = width;
         canvas.height = height;
         ctx.clearRect(0, 0, width, height);
