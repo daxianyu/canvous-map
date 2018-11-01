@@ -5,87 +5,81 @@ import {
 const invariant = require('invariant')
 
 export default class MassMarksDrawer {
-  constructor(map, options, events = {
-    onClick: null
-  }) {
+  constructor(options) {
+    const {
+      map, data,
+    } = options;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    invariant(map, 'map is required')
-    invariant(Array.isArray(options.points), 'points must be array')
-    this.events = {...events};
+    invariant(
+      map,
+      'map is required'
+    );
+    invariant(
+      Array.isArray(data),
+      'points must be array'
+    );
     this.options = {...options};
-    this.map = map
+    this.map = map;
     this.canvas = canvas;
-    // extract globally to avoid recalculation
+
+    /** Extract globally to avoid recalculation */
     this.ctx = ctx;
     this.zoom = 3;
     this.pointRadius = options.radius || 1;
-    this.massRenderer();
-    // stop rendering when dragging for it will cause disturbance
+    this.render();
+
+    /** Stop rendering when dragging for it will cause disturbance */
     map.on('dragging', this.listenDragging, this);
     map.on('dragend', this.listenDragEnd, this);
     map.on('click', this.listenClick, this);
     map.on('mousemove', this.listenMouseMove, this);
   }
 
+  /**
+   * Filter map, events, should not transfer to MassMarks2D
+   * */
   setOption(options) {
-    const { layer, points, radius = 1, speed, useKd, isFixedRadius=false } = options;
-    const lastOptions = this.options;
-    this.options = {...this.options, ...options};
+    const { radius = 1, isFixedRadius=false, ...rest } = options;
     const { ctx, canvas } = this;
-    if (points !== lastOptions.points ||
-      (useKd !== lastOptions.useKd)
-    ) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this.massRenderer();
-    } else if (layer !== lastOptions.layer) {
-      if (layer < lastOptions.layer) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-      this.pointRender.setLayer(layer);
-    } else if (speed !== lastOptions.speed) {
-      this.pointRender.setSpeed(speed);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this.pointRender.restart();
-    } else if (radius !== lastOptions.radius) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if(isFixedRadius) {
-        this.pointRadius = radius
-      } else {
-        this.pointRadius = radius / this.map.getResolution()
-      }
-      this.pointRender.restart();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.options = {...options};
+    const newOptions = rest;
+    let pointRadius = radius;
+    if(!isFixedRadius) {
+      pointRadius = radius / this.map.getResolution();
     }
+    newOptions.radius = pointRadius;
+    this.pointRender.setOptions(newOptions);
   }
 
-  setEvents(events) {
-    const lastEvents= {...this.events}
-    this.events = {...lastEvents, ...events}
-  }
-
+  /** Remove events and remove custom layer */
   destroy() {
     this.map.off('dragging', this.listenDragging, this);
     this.map.off('dragend', this.listenDragEnd, this);
     this.map.off('click', this.listenClick, this)
     this.map.off('mousemove', this.listenMouseMove, this)
+    this.customLayer.setMap(null);
   }
 
+  /** Stop rendering when mouse dragging */
   listenDragging() {
-    this.pointRender.stop();
+    this.pointRender.pause();
   }
 
   listenDragEnd() {
-    this.pointRender.start();
+    this.pointRender.continue();
   }
 
   listenClick(point) {
-    if(!this.events.onClick) return;
+    if(!this.options.onClick) return;
     const nearest = this.getNearestPoint(point)
     if(nearest) {
-      this.events.onClick(nearest)
+      this.options.onClick(nearest)
     }
   }
 
+  /** Add mouse pointer when points detected nearby */
   listenMouseMove(point) {
     const nearest = this.getNearestPoint(point)
     const container = this.map.getContainer()
@@ -104,29 +98,27 @@ export default class MassMarksDrawer {
     return nearestPoint
   }
 
-  /** re init renderer */
-  massRenderer() {
+  /** ReInit renderer */
+  render() {
     const AMap = window.AMap;
     const { map, canvas, ctx, options } = this;
     let { customLayer } = this;
-    const { speed, useKd = false, layer, points = [], isFixedRadius } = options;
+    const { speed, useKd = false, layer, data = [], isFixedRadius } = options;
 
-    // will unMount last MassRender
+    /** Will unMount last MassRender */
     if (this.pointRender) {
-      this.pointRender.stop();
+      this.pointRender.pause();
     }
 
     AMap.plugin('AMap.CustomLayer', () => {
-      this.pointRender = new MassMarks2D(points, (point) => {
-        const { x, y } = convertToXy(map, point);
-        ctx.beginPath();
-        ctx.arc(x, y, this.pointRadius, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.closePath();
-      }, {
+      this.pointRender = new MassMarks2D(ctx, {
+        data,
         speed,
         useKd,
         layer,
+        pointConverter: (point) => {
+          return convertToXy(map, point);
+        },
         distance: isFixedRadius? undefined: getDistance,
         dimension: isFixedRadius? undefined: ['lat', 'lng']
       });
@@ -137,11 +129,10 @@ export default class MassMarksDrawer {
           zooms: [3, 18],
         });
         this.customLayer = customLayer;
-        map.add(customLayer);
       }
 
       /**
-       * reset zoom, canvas size, fillStyle
+       * Reset zoom, canvas size, fillStyle
        * calculate latest pointRadius
        * */
       customLayer.render = ({ size, W }) => {
@@ -149,18 +140,21 @@ export default class MassMarksDrawer {
         const { zoom } = W;
         this.zoom = zoom;
         const { radius, fillColor = 'black', isFixedRadius } = this.options
-        // Int renders faster than float
-        if (isFixedRadius) {
-          this.pointRadius = radius;
-        } else {
-          this.pointRadius = radius / this.map.getResolution();
+        /** Int renders faster than float */
+        let pointRadius = radius;
+        if (!isFixedRadius) {
+          pointRadius = Math.ceil(radius / this.map.getResolution());
         }
+        this.pointRender.setOptions({
+          radius: pointRadius,
+        });
         canvas.width = width;
         canvas.height = height;
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = fillColor;
-        this.pointRender.restartMain();
+        this.pointRender.render();
       };
+      customLayer.setMap(map)
     });
   }
 }
