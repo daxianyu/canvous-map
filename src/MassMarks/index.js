@@ -40,16 +40,18 @@ export default class MassMarksDrawer {
    * Filter map, events, should not transfer to MassMarks2D
    * */
   setOption(options) {
-    const { radius = 1, isFixedRadius=false, ...rest } = options;
+    const { radius, isFixedRadius=false, ...rest } = options;
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.options = {...options};
+    Object.assign(this.options, options)
     const newOptions = rest;
-    let pointRadius = radius;
-    if(!isFixedRadius) {
-      pointRadius = radius / this.map.getResolution();
+    if(radius !== undefined) {
+      let pointRadius = radius;
+      if(!isFixedRadius) {
+        pointRadius = pointRadius / this.map.getResolution();
+      }
+      newOptions.radius = Math.ceil(pointRadius);
     }
-    newOptions.radius = pointRadius;
     this.pointRender.setOptions(newOptions);
   }
 
@@ -92,9 +94,17 @@ export default class MassMarksDrawer {
 
   getNearestPoint(point) {
     const { lnglat } = point
-    let nearestPoint = this.pointRender.getNearest(lnglat, this.options.radius, 1)
-    if(!nearestPoint.length) return
-    nearestPoint = nearestPoint[0][0]
+    let { radius, isFixedRadius } = this.options
+    /** If point in lng-lat, but radius is fixed,
+     * px should transform to actual distance.
+     * 2x range
+     * */
+    if(isFixedRadius) {
+      radius = radius * this.map.getResolution()
+    }
+    let nearestPoint = this.pointRender.getNearest(lnglat, radius, 1);
+    if(!nearestPoint.length) return;
+    nearestPoint = nearestPoint[0][0];
     return nearestPoint
   }
 
@@ -103,7 +113,7 @@ export default class MassMarksDrawer {
     const AMap = window.AMap;
     const { map, canvas, ctx, options } = this;
     let { customLayer } = this;
-    const { speed, useKd = false, layer, data = [], isFixedRadius } = options;
+    const { speed, useKd, layer, data = [], isFixedRadius } = options;
 
     /** Will unMount last MassRender */
     if (this.pointRender) {
@@ -119,8 +129,9 @@ export default class MassMarksDrawer {
         pointConverter: (point) => {
           return convertToXy(map, point);
         },
-        distance: isFixedRadius? undefined: getDistance,
-        dimension: isFixedRadius? undefined: ['lat', 'lng']
+        /** Radius is fixed or not is unRelevant to unit */
+        distance: getDistance,
+        dimension: ['lat', 'lng']
       });
 
       if (!customLayer) {
