@@ -127,7 +127,9 @@ export default class MassMarksDrawer {
         useKd,
         layer,
         pointConverter: (point) => {
-          return convertToXy(map, point);
+          const { fillColor, radius } = point;
+          const newPoint = convertToXy(map, point);
+          return {...newPoint, fillColor, radius};
         },
         /** Radius is fixed or not is unRelevant to unit */
         distance: getDistance,
@@ -156,9 +158,11 @@ export default class MassMarksDrawer {
         if (!isFixedRadius) {
           pointRadius = Math.ceil(radius / this.map.getResolution());
         }
-        this.pointRender.setOptions({
-          radius: pointRadius,
-        });
+        if(pointRadius !== this.pointRender.$$radius) {
+          this.pointRender.setOptions({
+            radius: pointRadius,
+          });
+        }
         canvas.width = width;
         canvas.height = height;
         ctx.clearRect(0, 0, width, height);
