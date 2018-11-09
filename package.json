@@ -1,6 +1,6 @@
 {
   "name": "map-drawer",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Start point for a javascript package",
   "main": "src/index.js",
   "scripts": {
@@ -48,7 +48,7 @@
     ]
   },
   "dependencies": {
-    "canvas-mass": "^1.0.1-alpha.9",
+    "canvous": "^1.0.1-alpha.11",
     "invariant": "^2.2.4"
   }
 }
