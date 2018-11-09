@@ -81,16 +81,28 @@ export default class MassMarksDrawer {
     }
   }
 
+  /**
+   * If hovering on point, should not trigger another
+   * onHover handler.
+   * If two point is adjoin, we should save
+   * latest nearest point to compare.
+   * */
+  $$hoveringPoint = null;
+
   /** Add mouse pointer when points detected nearby */
   listenMouseMove(point) {
     const nearest = this.getNearestPoint(point)
     const container = this.map.getContainer()
     if(nearest) {
       container.style.cursor = 'pointer';
-      if(this.options.onHover) {
-        this.options.onHover(point, nearest);
+      if(this.$$hoveringPoint !== nearest) {
+        this.$$hoveringPoint = nearest;
+        if(this.options.onHover) {
+          this.options.onHover(point, nearest);
+        }
       }
     } else {
+      this.$$hoveringPoint = null;
       delete container.style.cursor;
     }
   }
