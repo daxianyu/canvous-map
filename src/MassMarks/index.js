@@ -87,6 +87,9 @@ export default class MassMarksDrawer {
     const container = this.map.getContainer()
     if(nearest) {
       container.style.cursor = 'pointer';
+      if(this.options.onHover) {
+        this.options.onHover(point, nearest);
+      }
     } else {
       delete container.style.cursor;
     }
