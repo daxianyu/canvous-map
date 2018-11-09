@@ -1,4 +1,4 @@
-import { Grid as CanvasGrid } from 'canvas-mass';
+import { Grid as CanvasGrid } from 'canvous';
 
 function lngLatToXy(map, position) {
   const { lng, lat } = position;

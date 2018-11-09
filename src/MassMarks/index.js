@@ -1,4 +1,4 @@
-import { MassMarks as MassMarks2D } from 'canvas-mass';
+import { MassMarks as MassMarks2D } from 'canvous';
 import {
   convertToXy, getDistance
 } from '../utils/utils';
