@@ -26,7 +26,6 @@ export default class MassMarksDrawer {
     /** Extract globally to avoid recalculation */
     this.ctx = ctx;
     this.zoom = 3;
-    this.pointRadius = options.radius || 1;
     this.render();
 
     /** Stop rendering when dragging for it will cause disturbance */
@@ -40,19 +39,12 @@ export default class MassMarksDrawer {
    * Filter map, events, should not transfer to MassMarks2D
    * */
   setOption(options) {
-    const { radius, isFixedRadius=false, ...rest } = options;
+    /* Radius is get every time map renders  */
+    const { radius, isFixedRadius, ...rest } = options;
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     Object.assign(this.options, options)
-    const newOptions = rest;
-    if(radius !== undefined) {
-      let pointRadius = radius;
-      if(!isFixedRadius) {
-        pointRadius = pointRadius / this.map.getResolution();
-      }
-      newOptions.radius = Math.ceil(pointRadius);
-    }
-    this.pointRender.setOptions(newOptions);
+    this.pointRender.setOptions(rest);
   }
 
   /** Remove events and remove custom layer */
@@ -109,15 +101,20 @@ export default class MassMarksDrawer {
 
   getNearestPoint(point) {
     const { lnglat } = point
+    let nearestPoint;
     let { radius, isFixedRadius } = this.options
     /** If point in lng-lat, but radius is fixed,
      * px should transform to actual distance.
      * 2x range
      * */
-    if(isFixedRadius) {
-      radius = radius * this.map.getResolution()
+    if ( typeof radius === 'function') {
+      nearestPoint = this.pointRender.getNearest(lnglat, radius(this.map), 1);
+    } else {
+      if(isFixedRadius) {
+        radius = radius * this.map.getResolution();
+      }
+      nearestPoint = this.pointRender.getNearest(lnglat, radius, 1);
     }
-    let nearestPoint = this.pointRender.getNearest(lnglat, radius, 1);
     if(!nearestPoint.length) return;
     nearestPoint = nearestPoint[0][0];
     return nearestPoint
@@ -128,7 +125,7 @@ export default class MassMarksDrawer {
     const AMap = window.AMap;
     const { map, canvas, ctx, options } = this;
     let { customLayer } = this;
-    const { speed, useKd, layer, data = [], isFixedRadius } = options;
+    const { speed, useKd, layer, data = [] } = options;
 
     /** Will unMount last MassRender */
     if (this.pointRender) {
@@ -167,11 +164,15 @@ export default class MassMarksDrawer {
         const { height, width } = size;
         const { zoom } = W;
         this.zoom = zoom;
-        const { radius, fillColor = 'black', isFixedRadius } = this.options
-        /** Int renders faster than float */
+        const { radius, fillColor = 'black', isFixedRadius } = this.options;
         let pointRadius = radius;
-        if (!isFixedRadius) {
-          pointRadius = Math.ceil(radius / this.map.getResolution());
+        if(typeof radius === 'function') {
+          pointRadius = radius(this.map)
+        } else {
+          if (!isFixedRadius) {
+            /* Int renders faster than float */
+            pointRadius = Math.ceil(radius / this.map.getResolution());
+          }
         }
         if(pointRadius !== this.pointRender.$$radius) {
           this.pointRender.setOptions({
