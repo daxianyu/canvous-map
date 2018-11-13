@@ -43,7 +43,7 @@ export default class MassMarksDrawer {
     const { radius, isFixedRadius, ...rest } = options;
     /* Keep a copy for AMap render  */
     Object.assign(this.options, options);
-    const { canvas } = this;
+    const { ctx, canvas } = this;
     /* When props change but map not move or zoom */
     if (radius !== undefined) {
       let pointRadius = radius;
@@ -56,6 +56,8 @@ export default class MassMarksDrawer {
       rest.radius = pointRadius;
     }
     canvas.width = canvas.width;
+    /* Size change will loss context info */
+    ctx.fillStyle = this.options.fillColor;
     /** Raw radius should be kept in this.options,
      * and the processed radius delivered to pointRender */
     this.pointRender.setOptions(rest);
