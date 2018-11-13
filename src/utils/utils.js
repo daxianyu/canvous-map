@@ -4,7 +4,11 @@ let reUseAbleLngLat;
 
 /** reUse LngLat obj for better performance */
 export function convertToXy(map, sourcePoint) {
-  const { lng, lat } = sourcePoint;
+  let { lng, lat } = sourcePoint;
+  if(Array.isArray(sourcePoint)) {
+    lng = sourcePoint[0];
+    lat = sourcePoint[1]
+  }
   if (!reUseAbleLngLat) {
     reUseAbleLngLat = new window.AMap.LngLat(0, 0);
   }
