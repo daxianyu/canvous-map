@@ -1,7 +1,11 @@
 import { Grid as CanvasGrid } from 'canvous';
 
 function lngLatToXy(map, position) {
-  const { lng, lat } = position;
+  let { lng, lat } = position;
+  if(Array.isArray(position)) {
+    lng = position[0];
+    lat = position[1];
+  }
   const lngLat = new window.AMap.LngLat(lng, lat);
   return map.lngLatToContainer(lngLat);
 }
@@ -44,10 +48,11 @@ export default class Grid {
        */
       customLayer.render = () => {
         /* Clear canvas. */
+        const { data } = this;
         this.canvas.width = width;
         this.layer.setOptions({
           data: this.convertData(data)
-        })
+        });
         /* Call layer's render function to draw grids. */
         this.layer.render();
       };
@@ -79,10 +84,17 @@ export default class Grid {
    * */
   setOptions = (options) => {
     const { data, useCache } = options;
-    this.data = data;
     const newOptions = {
       useCache,
+    };
+    if(this.data!==data) {
+      newOptions.data = this.convertData(data);
     }
     this.layer.setOptions(newOptions)
+    /* When data change, but AMap does not move or zoom inout */
+    if(newOptions.data) {
+      this.layer.render();
+    }
+    this.data = data;
   }
 }
