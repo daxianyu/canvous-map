@@ -41,9 +41,21 @@ export default class MassMarksDrawer {
   setOption(options) {
     /* Radius is get every time map renders  */
     const { radius, isFixedRadius, ...rest } = options;
-    const { ctx, canvas } = this;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    Object.assign(this.options, options)
+    const { canvas } = this;
+    /* When props change but map not move or zoom */
+    if (radius !== undefined) {
+      let pointRadius = radius;
+      if (typeof radius === 'function') {
+        pointRadius = radius();
+      } else {
+        if (!isFixedRadius) {
+          pointRadius = radius / this.map.getResolution()
+        }
+      }
+      rest.radius = Math.ceil(pointRadius);
+    }
+    canvas.width = canvas.width;
+    Object.assign(this.options, rest)
     this.pointRender.setOptions(rest);
   }
 
