@@ -1,8 +1,8 @@
 import { MassMarks as MassMarks2D } from 'canvous';
 import {
-  convertToXy, getDistance
+  convertToXy, getDistance,
 } from '../utils/utils';
-const invariant = require('invariant')
+const invariant = require('invariant');
 
 export default class MassMarksDrawer {
   constructor(options) {
@@ -13,13 +13,13 @@ export default class MassMarksDrawer {
     const ctx = canvas.getContext('2d');
     invariant(
       map,
-      'map is required'
+      'map is required',
     );
     invariant(
       Array.isArray(data),
-      'points must be array'
+      'points must be array',
     );
-    this.options = {...options};
+    this.options = { ...options };
     this.map = map;
     this.canvas = canvas;
 
@@ -46,16 +46,14 @@ export default class MassMarksDrawer {
     if (radius !== undefined) {
       let pointRadius = radius;
       if (typeof radius === 'function') {
-        pointRadius = radius();
-      } else {
-        if (!isFixedRadius) {
-          pointRadius = radius / this.map.getResolution()
+        pointRadius = radius(this.map);
+      } else if (!isFixedRadius) {
+          pointRadius = radius / this.map.getResolution();
         }
-      }
       rest.radius = Math.ceil(pointRadius);
     }
     canvas.width = canvas.width;
-    Object.assign(this.options, rest)
+    Object.assign(this.options, rest);
     this.pointRender.setOptions(rest);
   }
 
@@ -63,8 +61,8 @@ export default class MassMarksDrawer {
   destroy() {
     this.map.off('dragging', this.listenDragging, this);
     this.map.off('dragend', this.listenDragEnd, this);
-    this.map.off('click', this.listenClick, this)
-    this.map.off('mousemove', this.listenMouseMove, this)
+    this.map.off('click', this.listenClick, this);
+    this.map.off('mousemove', this.listenMouseMove, this);
     this.customLayer.setMap(null);
   }
 
@@ -78,10 +76,10 @@ export default class MassMarksDrawer {
   }
 
   listenClick(point) {
-    if(!this.options.onClick) return;
-    const nearest = this.getNearestPoint(point)
-    if(nearest) {
-      this.options.onClick(nearest)
+    if (!this.options.onClick) return;
+    const nearest = this.getNearestPoint(point);
+    if (nearest) {
+      this.options.onClick(nearest);
     }
   }
 
@@ -95,13 +93,13 @@ export default class MassMarksDrawer {
 
   /** Add mouse pointer when points detected nearby */
   listenMouseMove(point) {
-    const nearest = this.getNearestPoint(point)
-    const container = this.map.getContainer()
-    if(nearest) {
+    const nearest = this.getNearestPoint(point);
+    const container = this.map.getContainer();
+    if (nearest) {
       container.style.cursor = 'pointer';
-      if(this.$$hoveringPoint !== nearest) {
+      if (this.$$hoveringPoint !== nearest) {
         this.$$hoveringPoint = nearest;
-        if(this.options.onHover) {
+        if (this.options.onHover) {
           this.options.onHover(point, nearest);
         }
       }
@@ -111,25 +109,25 @@ export default class MassMarksDrawer {
     }
   }
 
-  getNearestPoint(point) {
-    const { lnglat } = point
+  getNearestPoint = (point) => {
+    const { lnglat } = point;
     let nearestPoint;
-    let { radius, isFixedRadius } = this.options
+    let { radius, isFixedRadius } = this.options;
     /** If point in lng-lat, but radius is fixed,
      * px should transform to actual distance.
      * 2x range
      * */
-    if ( typeof radius === 'function') {
+    if (typeof radius === 'function') {
       nearestPoint = this.pointRender.getNearest(lnglat, radius(this.map), 1);
     } else {
-      if(isFixedRadius) {
-        radius = radius * this.map.getResolution();
+      if (isFixedRadius) {
+        radius *= this.map.getResolution();
       }
       nearestPoint = this.pointRender.getNearest(lnglat, radius, 1);
     }
-    if(!nearestPoint.length) return;
+    if (!nearestPoint.length) return;
     nearestPoint = nearestPoint[0][0];
-    return nearestPoint
+    return nearestPoint;
   }
 
   /** ReInit renderer */
@@ -153,11 +151,11 @@ export default class MassMarksDrawer {
         pointConverter: (point) => {
           const { fillColor, radius } = point;
           const newPoint = convertToXy(map, point);
-          return {...newPoint, fillColor, radius};
+          return { ...newPoint, fillColor, radius };
         },
         /** Radius is fixed or not is unRelevant to unit */
         distance: getDistance,
-        dimension: ['lat', 'lng']
+        dimension: ['lat', 'lng'],
       });
 
       if (!customLayer) {
@@ -178,15 +176,13 @@ export default class MassMarksDrawer {
         this.zoom = zoom;
         const { radius, fillColor = 'black', isFixedRadius } = this.options;
         let pointRadius = radius;
-        if(typeof radius === 'function') {
-          pointRadius = radius(this.map)
-        } else {
-          if (!isFixedRadius) {
+        if (typeof radius === 'function') {
+          pointRadius = radius(this.map);
+        } else if (!isFixedRadius) {
             /* Int renders faster than float */
             pointRadius = Math.ceil(radius / this.map.getResolution());
           }
-        }
-        if(pointRadius !== this.pointRender.$$radius) {
+        if (pointRadius !== this.pointRender.$$radius) {
           this.pointRender.setOptions({
             radius: pointRadius,
           });
@@ -197,7 +193,7 @@ export default class MassMarksDrawer {
         ctx.fillStyle = fillColor;
         this.pointRender.render();
       };
-      customLayer.setMap(map)
+      customLayer.setMap(map);
     });
   }
 }
