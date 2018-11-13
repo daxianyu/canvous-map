@@ -89,6 +89,7 @@ export default class Grid {
     };
     if(this.data!==data) {
       newOptions.data = this.convertData(data);
+      this.canvas.width = this.canvas.width;
     }
     this.layer.setOptions(newOptions)
     /* When data change, but AMap does not move or zoom inout */
