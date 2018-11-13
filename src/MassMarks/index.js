@@ -41,6 +41,8 @@ export default class MassMarksDrawer {
   setOption(options) {
     /* Radius is get every time map renders  */
     const { radius, isFixedRadius, ...rest } = options;
+    /* Keep a copy for AMap render  */
+    Object.assign(this.options, options);
     const { canvas } = this;
     /* When props change but map not move or zoom */
     if (radius !== undefined) {
@@ -48,12 +50,14 @@ export default class MassMarksDrawer {
       if (typeof radius === 'function') {
         pointRadius = radius(this.map);
       } else if (!isFixedRadius) {
-          pointRadius = radius / this.map.getResolution();
-        }
-      rest.radius = Math.ceil(pointRadius);
+        pointRadius = radius / this.map.getResolution();
+      }
+      pointRadius = Math.ceil(pointRadius);
+      rest.radius = pointRadius;
     }
     canvas.width = canvas.width;
-    Object.assign(this.options, rest);
+    /** Raw radius should be kept in this.options,
+     * and the processed radius delivered to pointRender */
     this.pointRender.setOptions(rest);
   }
 
@@ -174,7 +178,7 @@ export default class MassMarksDrawer {
         const { height, width } = size;
         const { zoom } = W;
         this.zoom = zoom;
-        const { radius, fillColor = 'black', isFixedRadius } = this.options;
+        const { radius, fillColor, isFixedRadius } = this.options;
         let pointRadius = radius;
         if (typeof radius === 'function') {
           pointRadius = radius(this.map);
@@ -190,7 +194,9 @@ export default class MassMarksDrawer {
         canvas.width = width;
         canvas.height = height;
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = fillColor;
+        if (fillColor) {
+          ctx.fillStyle = fillColor;
+        }
         this.pointRender.render();
       };
       customLayer.setMap(map);
