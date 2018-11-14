@@ -15,15 +15,21 @@ function lngLatToXy(map, position) {
   return map.lngLatToContainer(lngLat);
 }
 
+function createDefaultCoordinateTransformation(map) {
+  return (position) => {
+    return lngLatToXy(map, position);
+  };
+}
+
 export default class Grid {
   constructor(options) {
     const {
-      data,
+      data = [],
       /**
        * Coordinate transformation function.
        * It consumes grid bounds and output x and y in pixel.
        */
-      coordinateTransformation,
+      coordinateTransformation = createDefaultCoordinateTransformation(options.map),
       height = 0,
       map,
       opacity = 1,
@@ -32,19 +38,30 @@ export default class Grid {
       zIndex = 12,
       zooms = [3, 18],
     } = options;
-    this.options = options;
+
+    this.options = {
+      data,
+      coordinateTransformation,
+      height,
+      map,
+      opacity,
+      useCache,
+      width,
+      zIndex,
+      zooms,
+    };
     /* Create canvas. */
     this.canvas = document.createElement('canvas');
     this.canvas.height = height;
     this.canvas.width = width;
-    this.map = map;
     this.ctx = this.canvas.getContext('2d');
-    /* Create a layer who understands how to draw grids on canvas context. */
     this.data = data;
+    this.map = map;
+    /* Create a layer who understands how to draw grids on canvas context. */
     this.layer = new CanvasGrid(this.ctx, {
-      useCache, data, coordinateTransformation: coordinateTransformation || function(point) {
-        return lngLatToXy(map, point);
-      }
+      coordinateTransformation,
+      data,
+      useCache,
     });
     /* Inject CustomLayer plugin. */
     window.AMap.plugin('AMap.CustomLayer', () => {
