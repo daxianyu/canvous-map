@@ -124,7 +124,11 @@ export default class MassMarksDrawer {
      * 2x range
      * */
     if (typeof radius === 'function') {
-      nearestPoint = this.pointRender.getNearest(lnglat, radius(this.map), 1);
+      let pointRadius = radius(this.map);
+      if (isFixedRadius) {
+        pointRadius *= this.map.getResolution();
+      }
+      nearestPoint = this.pointRender.getNearest(lnglat, pointRadius, 1);
     } else {
       if (isFixedRadius) {
         radius *= this.map.getResolution();
