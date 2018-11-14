@@ -19,15 +19,18 @@ export default class Grid {
   constructor(options) {
     const {
       data,
+      /**
+       * Coordinate transformation function.
+       * It consumes grid bounds and output x and y in pixel.
+       */
+      coordinateTransformation,
       height = 0,
       map,
       opacity = 1,
       useCache = true,
       width = 0,
-      zooms = [3, 18],
       zIndex = 12,
-      /* Covert raw point to x-y point */
-      pointConverter,
+      zooms = [3, 18],
     } = options;
     this.options = options;
     /* Create canvas. */
@@ -39,7 +42,7 @@ export default class Grid {
     /* Create a layer who understands how to draw grids on canvas context. */
     this.data = data;
     this.layer = new CanvasGrid(this.ctx, {
-      useCache, data, pointConverter: pointConverter || function(point) {
+      useCache, data, coordinateTransformation: coordinateTransformation || function(point) {
         return lngLatToXy(map, point);
       }
     });
