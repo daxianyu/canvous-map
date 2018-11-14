@@ -1,11 +1,16 @@
 import { Grid as CanvasGrid } from 'canvous';
 
+/**
+ * Coordinate transformation.
+ * Transform lngLat to pixel.
+ */
 function lngLatToXy(map, position) {
   let { lng, lat } = position;
-  if(Array.isArray(position)) {
+  if (Array.isArray(position)) {
     lng = position[0];
     lat = position[1];
   }
+
   const lngLat = new window.AMap.LngLat(lng, lat);
   return map.lngLatToContainer(lngLat);
 }
