@@ -86,9 +86,9 @@ export default class Grid {
     map.on('click', this.handleClick, this);
   }
 
-  /** Remove events and remove custom layer */
+  /* Remove events and remove custom layer. */
   destroy() {
-    this.map.off('click', this.listenClick, this);
+    this.map.off('click', this.handleClick, this);
     this.customLayer.setMap(null);
   }
 
