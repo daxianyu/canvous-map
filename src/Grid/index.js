@@ -1,42 +1,67 @@
 import { Grid as CanvasGrid } from 'canvous';
 
+/**
+ * Coordinate transformation.
+ * Transform lngLat to pixel.
+ */
 function lngLatToXy(map, position) {
   let { lng, lat } = position;
-  if(Array.isArray(position)) {
+  if (Array.isArray(position)) {
     lng = position[0];
     lat = position[1];
   }
+
   const lngLat = new window.AMap.LngLat(lng, lat);
   return map.lngLatToContainer(lngLat);
+}
+
+function createDefaultCoordinateTransformation(map) {
+  return (position) => {
+    return lngLatToXy(map, position);
+  };
 }
 
 export default class Grid {
   constructor(options) {
     const {
-      data,
+      data = [],
+      /**
+       * Coordinate transformation function.
+       * It consumes grid bounds and output x and y in pixel.
+       */
+      coordinateTransformation = createDefaultCoordinateTransformation(options.map),
       height = 0,
       map,
       opacity = 1,
       useCache = true,
       width = 0,
-      zooms = [3, 18],
       zIndex = 12,
-      /* Covert raw point to x-y point */
-      pointConverter,
+      zooms = [3, 18],
     } = options;
-    this.options = options;
+
+    this.options = {
+      data,
+      coordinateTransformation,
+      height,
+      map,
+      opacity,
+      useCache,
+      width,
+      zIndex,
+      zooms,
+    };
     /* Create canvas. */
     this.canvas = document.createElement('canvas');
     this.canvas.height = height;
     this.canvas.width = width;
-    this.map = map;
     this.ctx = this.canvas.getContext('2d');
-    /* Create a layer who understands how to draw grids on canvas context. */
     this.data = data;
+    this.map = map;
+    /* Create a layer who understands how to draw grids on canvas context. */
     this.layer = new CanvasGrid(this.ctx, {
-      useCache, data, pointConverter: pointConverter || function(point) {
-        return lngLatToXy(map, point);
-      }
+      coordinateTransformation,
+      data,
+      useCache,
     });
     /* Inject CustomLayer plugin. */
     window.AMap.plugin('AMap.CustomLayer', () => {
