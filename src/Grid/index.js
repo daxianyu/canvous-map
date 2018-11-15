@@ -124,15 +124,6 @@ export default class Grid {
       shouldReRender = true;
     }
 
-    if (map !== this.options.map) {
-      this.customLayer.setMap(map);
-      /**
-       * It might be not neccessary to call re-render function
-       * because setMap will perform re-render automatically
-       */
-      /* shouldReRender = true; */
-    }
-
     if (opacity !== this.options.opacity) {
       this.customLayer.setOpacity(opacity);
       shouldReRender = true;
@@ -151,6 +142,15 @@ export default class Grid {
     if (zIndex !== this.options.zIndex) {
       this.customLayer.setzIndex(zIndex);
       shouldReRender = true;
+    }
+
+    if (map !== this.options.map) {
+      this.customLayer.setMap(map);
+      /**
+       * It might be not neccessary to call re-render function
+       * because setMap will perform re-render automatically
+       */
+      shouldReRender = false;
     }
 
     /* Update canvas grid options if options is not empty. */
