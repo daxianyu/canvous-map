@@ -92,10 +92,6 @@ export default class Grid {
   setOptions = (options) => {
     const {
       data = this.options.data,
-      /**
-       * Coordinate transformation function.
-       * It consumes grid bounds and output x and y in pixel.
-       */
       coordinateTransformation = this.options.coordinateTransformation,
       height = this.options.height,
       map = this.options.map,
