@@ -57,7 +57,6 @@ export default class Grid {
     this.canvas.height = height;
     this.canvas.width = width;
     this.ctx = this.canvas.getContext('2d');
-    this.data = data;
     this.map = map;
     /* Create a layer who understands how to draw grids on canvas context. */
     this.canvasGrid = new CanvasGrid(this.ctx, {
@@ -86,6 +85,101 @@ export default class Grid {
     map.on('click', this.handleClick, this);
   }
 
+  /**
+   * Expose this funtion to change Grid UI and behaviours.
+   */
+  setOptions = (options) => {
+    const {
+      data = this.options.data,
+      /**
+       * Coordinate transformation function.
+       * It consumes grid bounds and output x and y in pixel.
+       */
+      coordinateTransformation = this.options.coordinateTransformation,
+      height = this.options.height,
+      map = this.options.map,
+      onClick = this.options.onClick,
+      opacity = this.options.opacity,
+      useCache = this.options.useCache,
+      width = this.options.width,
+      zIndex = this.options.zIndex,
+      /* There is no api to update zooms  */
+      /* zooms = this.options.zooms, */
+    } = options;
+
+    /* Save differential options only. */
+    const canvasGridNewOptions = {};
+    /* If it is true, render function will be called to perform a re-render. */
+    let shouldReRender = false;
+
+    if (data !== this.options.data) {
+      canvasGridNewOptions.data = data;
+      shouldReRender = true;
+    }
+
+    if (coordinateTransformation !== this.options.coordinateTransformation) {
+      canvasGridNewOptions.coordinateTransformation = coordinateTransformation;
+      shouldReRender = true;
+    }
+
+    if (height !== this.options.height) {
+      this.canvas.height = height;
+      shouldReRender = true;
+    }
+
+    if (map !== this.options.map) {
+      this.customLayer.setMap(map);
+      /**
+       * It might be not neccessary to call re-render function
+       * because setMap will perform re-render automatically
+       */
+      /* shouldReRender = true; */
+    }
+
+    if (opacity !== this.options.opacity) {
+      this.customLayer.setOpacity(opacity);
+      shouldReRender = true;
+    }
+
+    if (useCache !== this.options.useCache) {
+      canvasGridNewOptions.useCache = useCache;
+      shouldReRender = true;
+    }
+
+    if (width !== this.options.width) {
+      this.canvas.width = width;
+      shouldReRender = true;
+    }
+
+    if (zIndex !== this.options.zIndex) {
+      this.customLayer.setzIndex(zIndex);
+      shouldReRender = true;
+    }
+
+    /* Update canvas grid options if options is not empty. */
+    if (Object.keys(canvasGridNewOptions).length !== 0) {
+      this.canvasGrid.setOptions(canvasGridNewOptions);
+    }
+
+    /* Perform re-render. */
+    if (shouldReRender) {
+      this.render();
+    }
+
+    /* Save new options. */
+    this.options = {
+      data,
+      coordinateTransformation,
+      height,
+      map,
+      onClick,
+      opacity,
+      useCache,
+      width,
+      zIndex,
+    };
+  }
+
   /* Remove events and remove custom layer. */
   destroy() {
     this.map.off('click', this.handleClick, this);
@@ -104,27 +198,5 @@ export default class Grid {
     this.canvas.width = this.canvas.width;
     /* Call canvasGrid's render function to draw grids. */
     this.canvasGrid.render();
-  }
-
-  /**
-   * set options
-   * @param {object} options
-   * */
-  setOptions = (options) => {
-    const { data, useCache } = options;
-    const newOptions = {
-      useCache,
-    };
-    /* Data changes, canvas should reRender */
-    if(this.data!==data) {
-      newOptions.data = data;
-      this.canvas.width = this.canvas.width;
-    }
-    this.canvasGrid.setOptions(newOptions);
-    /* When data change, but AMap does not move or zoom inout */
-    if(newOptions.data) {
-      this.canvasGrid.render();
-    }
-    this.data = data;
   }
 }
