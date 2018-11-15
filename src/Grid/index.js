@@ -109,33 +109,33 @@ export default class Grid {
     /* If it is true, render function will be called to perform a re-render. */
     let shouldReRender = false;
 
-    if (data !== this.options.data) {
-      canvasGridNewOptions.data = data;
-      shouldReRender = true;
-    }
+    /**
+     * Combine changed option props that will cause reRender together.
+     * */
+    const optionShouldRender = (key, newProp) => {
+      const lastProp = this.options[key];
+      if(lastProp !== newProp) {
+        canvasGridNewOptions[key] = newProp;
+        shouldReRender = true;
+      }
+    };
 
-    if (coordinateTransformation !== this.options.coordinateTransformation) {
-      canvasGridNewOptions.coordinateTransformation = coordinateTransformation;
-      shouldReRender = true;
-    }
+    optionShouldRender('data', data);
+    optionShouldRender('useCache', useCache);
+    optionShouldRender('coordinateTransformation', coordinateTransformation);
 
     if (height !== this.options.height) {
       this.canvas.height = height;
       shouldReRender = true;
     }
 
-    if (opacity !== this.options.opacity) {
-      this.customLayer.setOpacity(opacity);
-      shouldReRender = true;
-    }
-
-    if (useCache !== this.options.useCache) {
-      canvasGridNewOptions.useCache = useCache;
-      shouldReRender = true;
-    }
-
     if (width !== this.options.width) {
       this.canvas.width = width;
+      shouldReRender = true;
+    }
+
+    if (opacity !== this.options.opacity) {
+      this.customLayer.setOpacity(opacity);
       shouldReRender = true;
     }
 
