@@ -32,6 +32,7 @@ export default class Grid {
       coordinateTransformation = createDefaultCoordinateTransformation(options.map),
       height = 0,
       map,
+      onClick,
       opacity = 1,
       useCache = true,
       width = 0,
@@ -44,6 +45,7 @@ export default class Grid {
       coordinateTransformation,
       height,
       map,
+      onClick,
       opacity,
       useCache,
       width,
@@ -58,7 +60,7 @@ export default class Grid {
     this.data = data;
     this.map = map;
     /* Create a layer who understands how to draw grids on canvas context. */
-    this.layer = new CanvasGrid(this.ctx, {
+    this.canvasGrid = new CanvasGrid(this.ctx, {
       coordinateTransformation,
       data,
       useCache,
@@ -80,8 +82,8 @@ export default class Grid {
       this.customLayer.setMap(map);
     });
 
-    /** Stop rendering when dragging for it will cause disturbance */
-    map.on('click', this.listenClick, this);
+    /* Stop rendering when dragging because it will cause disturbance. */
+    map.on('click', this.handleClick, this);
   }
 
   /** Remove events and remove custom layer */
@@ -90,17 +92,18 @@ export default class Grid {
     this.customLayer.setMap(null);
   }
 
-  listenClick(point) {
-    if(!this.options.onClick) return;
-    this.layer.getNearestGrid(point.pixel, this.options.onClick);
+  /* Look for grids that has been clicked. */
+  handleClick(point) {
+    if (!this.options.onClick) return;
+    this.canvasGrid.findGridsContainPoint(point.pixel, this.options.onClick);
   }
 
   /* Render function will be called every time canvas needs update (such as after drag and zoom). */
   render() {
     /* Clear canvas. */
     this.canvas.width = this.canvas.width;
-    /* Call layer's render function to draw grids. */
-    this.layer.render();
+    /* Call canvasGrid's render function to draw grids. */
+    this.canvasGrid.render();
   }
 
   /**
@@ -117,10 +120,10 @@ export default class Grid {
       newOptions.data = data;
       this.canvas.width = this.canvas.width;
     }
-    this.layer.setOptions(newOptions);
+    this.canvasGrid.setOptions(newOptions);
     /* When data change, but AMap does not move or zoom inout */
     if(newOptions.data) {
-      this.layer.render();
+      this.canvasGrid.render();
     }
     this.data = data;
   }
