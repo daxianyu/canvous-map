@@ -75,8 +75,9 @@ export default class Grid {
       /**
        * Assign custom layer's render function so that this function will be called
        * every time our canvas needs update.
+       * 'this' referred to map
        */
-      this.customLayer.render = this.render;
+      this.customLayer.render = this.render.bind(this);
       /* Register customerLayer to map. */
       this.customLayer.setMap(map);
     });
