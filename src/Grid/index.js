@@ -66,24 +66,18 @@ export default class Grid {
     /* Inject CustomLayer plugin. */
     window.AMap.plugin('AMap.CustomLayer', () => {
       /* Create AMap custom layer with our canvas. */
-      const customLayer = new window.AMap.CustomLayer(this.canvas, {
+      this.customLayer = new window.AMap.CustomLayer(this.canvas, {
         opacity,
-        zooms,
         zIndex,
+        zooms,
       });
-      this.customLayer = customLayer;
       /**
        * Assign custom layer's render function so that this function will be called
        * every time our canvas needs update.
        */
-      customLayer.render = () => {
-        /* Clear canvas. */
-        this.canvas.width = this.canvas.width;
-        /* Call layer's render function to draw grids. */
-        this.layer.render();
-      };
+      this.customLayer.render = this.render;
       /* Register customerLayer to map. */
-      customLayer.setMap(map);
+      this.customLayer.setMap(map);
     });
 
     /** Stop rendering when dragging for it will cause disturbance */
@@ -99,6 +93,14 @@ export default class Grid {
   listenClick(point) {
     if(!this.options.onClick) return;
     this.layer.getNearestGrid(point.pixel, this.options.onClick);
+  }
+
+  /* Render function will be called every time canvas needs update (such as after drag and zoom). */
+  render() {
+    /* Clear canvas. */
+    this.canvas.width = this.canvas.width;
+    /* Call layer's render function to draw grids. */
+    this.layer.render();
   }
 
   /**
