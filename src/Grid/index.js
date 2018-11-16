@@ -57,6 +57,8 @@ export default class Grid {
        * every time our canvas needs update.
        * 'this' referred to map
        */
+      this.canvas.width = width;
+      this.canvas.height = height;
       this.customLayer.render = this.render.bind(this);
       /* Register customerLayer to map. */
       this.customLayer.setMap(map);
