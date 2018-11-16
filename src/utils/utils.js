@@ -24,3 +24,25 @@ export function getDistance(p1, p2){
   const { lat:lat02, lng:lng02 } = p2;
   return window.AMap.GeometryUtil.distance([lng01, lat01], [lng02, lat02])
 }
+
+
+/**
+ * Coordinate transformation.
+ * Transform lngLat to pixel.
+ */
+function lngLatToXy(map, position) {
+  let { lng, lat } = position;
+  if (Array.isArray(position)) {
+    lng = position[0];
+    lat = position[1];
+  }
+
+  const lngLat = new window.AMap.LngLat(lng, lat);
+  return map.lngLatToContainer(lngLat);
+}
+
+export function createDefaultCoordinateTransformation(map) {
+  return (position) => {
+    return lngLatToXy(map, position);
+  };
+}
