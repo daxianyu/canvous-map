@@ -1,4 +1,4 @@
-import { createDefaultCoordinateTransformation } from '../utils/utils';
+import { createDefaultCoordinateArrayTransformation } from '../utils/utils';
 import { Arcs as CanvousArcs } from 'canvous';
 
 export default class Arcs {
@@ -7,11 +7,13 @@ export default class Arcs {
       data = [],
       /**
        * Coordinate transformation function.
-       * It consumes grid bounds and output x and y in pixel.
+       * It consumes output x and y in pixel.
        */
-      coordinateTransformation = createDefaultCoordinateTransformation(options.map),
+      coordinateTransformation = createDefaultCoordinateArrayTransformation(options.map),
       height = 0,
       map,
+      strokeWeight = 1,
+      strokeColor = 'black',
       opacity = 1,
       width = 0,
       zIndex = 12,
@@ -27,6 +29,8 @@ export default class Arcs {
       width,
       zIndex,
       zooms,
+      strokeWeight,
+      strokeColor,
     };
 
     /* Create canvas. */
@@ -57,6 +61,8 @@ export default class Arcs {
       /* Register customerLayer to map. */
       this.customLayer.setMap(map);
     });
+    map.on('dragging', this.listenDragging, this);
+    map.on('dragend', this.listenDragEnd, this);
   }
 
   setOptions = (options) => {
@@ -68,6 +74,8 @@ export default class Arcs {
       opacity = this.options.opacity,
       width = this.options.width,
       zIndex = this.options.zIndex,
+      strokeWeight = this.options.strokeWeight,
+      strokeColor = this.options.strokeColor,
     } = options;
 
     /* Save differential options only. */
@@ -86,7 +94,8 @@ export default class Arcs {
       }
     };
     optionShouldRender('data', data);
-    optionShouldRender('coordinateTransformation', coordinateTransformation);
+    optionShouldRender('strokeColor', strokeColor);
+    optionShouldRender('strokeWeight', strokeWeight);
 
     if (height !== this.options.height) {
       this.canvas.height = height;
@@ -117,9 +126,9 @@ export default class Arcs {
       shouldReRender = false;
     }
 
-    /* Update canvas grid options if options is not empty. */
+    /* Update canvas options if options is not empty. */
     if (Object.keys(canvasArcsNewOptions).length !== 0) {
-      this.canvasGrid.setOptions(canvasArcsNewOptions);
+      this.canvasArcs.setOptions(canvasArcsNewOptions);
     }
 
     /* Perform re-render. */
@@ -139,13 +148,28 @@ export default class Arcs {
     };
   };
 
+  /** Stop rendering when mouse dragging */
+  listenDragging() {
+    this.canvasArcs.pause();
+  }
+
+  listenDragEnd() {
+    this.canvasArcs.continue();
+  }
+
   /* Remove events and remove custom layer. */
   destroy() {
+    this.map.off('dragging', this.listenDragging, this);
+    this.map.off('dragend', this.listenDragEnd, this);
     this.customLayer.setMap(null);
   }
 
   /* Called every time when map view change or props updated */
   render() {
+    const { width, height } = this.options;
+    this.ctx.clearRect(0, 0, width, height);
+    this.ctx.lineWidth = this.options.strokeWeight;
+    this.ctx.strokeStyle = this.options.strokeColor;
     this.canvasArcs.render();
   }
 }
