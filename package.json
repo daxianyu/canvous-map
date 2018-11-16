@@ -21,7 +21,7 @@
     "preversion": "yarn test",
     "version": "yarn build && npm publish build"
   },
-  "repository": "git@github.com:daxianyu/map-drawer",
+  "repository": "git@github.com:daxianyu/canvous-map",
   "author": "daxianyu <daxianyu@outlook.com>",
   "license": "MIT",
   "devDependencies": {
