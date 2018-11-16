@@ -5,9 +5,9 @@ let reUseAbleLngLat;
 /** reUse LngLat obj for better performance */
 export function convertToXy(map, sourcePoint) {
   let { lng, lat } = sourcePoint;
-  if(Array.isArray(sourcePoint)) {
+  if (Array.isArray(sourcePoint)) {
     lng = sourcePoint[0];
-    lat = sourcePoint[1]
+    lat = sourcePoint[1];
   }
   if (!reUseAbleLngLat) {
     reUseAbleLngLat = new window.AMap.LngLat(0, 0);
@@ -19,12 +19,11 @@ export function convertToXy(map, sourcePoint) {
   return map.lngLatToContainer(reUseAbleLngLat);
 }
 
-export function getDistance(p1, p2){
-  const { lat:lat01, lng:lng01 } = p1;
-  const { lat:lat02, lng:lng02 } = p2;
-  return window.AMap.GeometryUtil.distance([lng01, lat01], [lng02, lat02])
+export function getDistance(p1, p2) {
+  const { lat: lat01, lng: lng01 } = p1;
+  const { lat: lat02, lng: lng02 } = p2;
+  return window.AMap.GeometryUtil.distance([lng01, lat01], [lng02, lat02]);
 }
-
 
 /**
  * Coordinate transformation.
@@ -44,5 +43,16 @@ function lngLatToXy(map, position) {
 export function createDefaultCoordinateTransformation(map) {
   return (position) => {
     return lngLatToXy(map, position);
+  };
+}
+
+function convertToXySet(map, position) {
+  const { x, y } = convertToXy(map, position);
+  return [x, y];
+}
+
+export function createDefaultCoordinateArrayTransformation(map) {
+  return (position) => {
+    return convertToXySet(map, position);
   };
 }
