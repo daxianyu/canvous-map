@@ -17,6 +17,8 @@ export default class Arcs {
       opacity = 1,
       width = 0,
       zIndex = 12,
+      /* L/R rate */
+      rate = 0.5,
       zooms = [3, 18],
     } = options;
 
@@ -28,6 +30,7 @@ export default class Arcs {
       opacity,
       width,
       zIndex,
+      rate,
       zooms,
       strokeWeight,
       strokeColor,
@@ -41,6 +44,7 @@ export default class Arcs {
     this.map = map;
     this.canvasArcs = new CanvousArcs(this.ctx, {
       data,
+      rate,
       coordinateTransformation,
     });
 
@@ -75,6 +79,7 @@ export default class Arcs {
       map = this.options.map,
       opacity = this.options.opacity,
       width = this.options.width,
+      rate = this.options.rate,
       zIndex = this.options.zIndex,
       strokeWeight = this.options.strokeWeight,
       strokeColor = this.options.strokeColor,
@@ -95,6 +100,7 @@ export default class Arcs {
         shouldReRender = true;
       }
     };
+    optionShouldRender('rate', rate);
     optionShouldRender('data', data);
     optionShouldRender('strokeColor', strokeColor);
     optionShouldRender('strokeWeight', strokeWeight);
@@ -133,12 +139,7 @@ export default class Arcs {
       this.canvasArcs.setOptions(canvasArcsNewOptions);
     }
 
-    /* Perform re-render. */
-    if (shouldReRender) {
-      this.render();
-    }
-
-    /* Save new options. */
+    /* Save new options. Before render */
     this.options = {
       data,
       coordinateTransformation,
@@ -146,8 +147,15 @@ export default class Arcs {
       map,
       opacity,
       width,
+      strokeColor,
+      strokeWeight,
       zIndex,
     };
+
+    /* Perform re-render. */
+    if (shouldReRender) {
+      this.render();
+    }
   };
 
   /** Stop rendering when mouse dragging */

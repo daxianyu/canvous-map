@@ -140,12 +140,7 @@ export default class Grid {
       this.canvasGrid.setOptions(canvasGridNewOptions);
     }
 
-    /* Perform re-render. */
-    if (shouldReRender) {
-      this.render();
-    }
-
-    /* Save new options. */
+    /* Save new options. Before render */
     this.options = {
       data,
       coordinateTransformation,
@@ -157,6 +152,11 @@ export default class Grid {
       width,
       zIndex,
     };
+
+    /* Perform re-render. */
+    if (shouldReRender) {
+      this.render();
+    }
   }
 
   /* Remove events and remove custom layer. */
