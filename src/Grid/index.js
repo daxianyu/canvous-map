@@ -1,5 +1,5 @@
 import { Grid as CanvasGrid } from 'canvous';
-import { createDefaultCoordinateTransformation } from '../utils/utils'
+import { createDefaultCoordinateTransformation } from '../utils/utils';
 
 export default class Grid {
   constructor(options) {
@@ -12,6 +12,7 @@ export default class Grid {
       coordinateTransformation = createDefaultCoordinateTransformation(options.map),
       height = 0,
       map,
+      lazy,
       onClick,
       opacity = 1,
       useCache = true,
@@ -25,6 +26,7 @@ export default class Grid {
       coordinateTransformation,
       height,
       map,
+      lazy,
       onClick,
       opacity,
       useCache,
@@ -43,6 +45,7 @@ export default class Grid {
       coordinateTransformation,
       data,
       useCache,
+      lazy,
     });
     /* Inject CustomLayer plugin. */
     window.AMap.plugin('AMap.CustomLayer', () => {
@@ -79,6 +82,7 @@ export default class Grid {
       coordinateTransformation = this.options.coordinateTransformation,
       height = this.options.height,
       map = this.options.map,
+      lazy = this.options.lazy,
       onClick = this.options.onClick,
       opacity = this.options.opacity,
       useCache = this.options.useCache,
@@ -98,7 +102,7 @@ export default class Grid {
      * */
     const optionShouldRender = (key, newProp) => {
       const lastProp = this.options[key];
-      if(lastProp !== newProp) {
+      if (lastProp !== newProp) {
         canvasGridNewOptions[key] = newProp;
         shouldReRender = true;
       }
@@ -107,6 +111,11 @@ export default class Grid {
     optionShouldRender('data', data);
     optionShouldRender('useCache', useCache);
     optionShouldRender('coordinateTransformation', coordinateTransformation);
+
+    /* Lazy Change will not cause reRender force */
+    if (lazy !== this.options.lazy) {
+      canvasGridNewOptions.lazy = lazy;
+    }
 
     if (height !== this.options.height) {
       this.canvas.height = height;
@@ -148,6 +157,7 @@ export default class Grid {
       coordinateTransformation,
       height,
       map,
+      lazy,
       onClick,
       opacity,
       useCache,
