@@ -66,6 +66,8 @@ export default class Grid {
 
     /* Stop rendering when dragging because it will cause disturbance. */
     map.on('click', this.handleClick, this);
+    map.on('dragging', this.listenDragging, this);
+    map.on('dragend', this.listenDragEnd, this);
   }
 
   /**
@@ -161,6 +163,8 @@ export default class Grid {
 
   /* Remove events and remove custom layer. */
   destroy() {
+    this.map.off('dragging', this.listenDragging, this);
+    this.map.off('dragend', this.listenDragEnd, this);
     this.map.off('click', this.handleClick, this);
     this.customLayer.setMap(null);
   }
@@ -169,6 +173,15 @@ export default class Grid {
   handleClick(point) {
     if (!this.options.onClick) return;
     this.canvasGrid.findGridsContainPoint(point.pixel, this.options.onClick);
+  }
+
+  /** Stop rendering when mouse dragging */
+  listenDragging() {
+    this.canvasGrid.pause();
+  }
+
+  listenDragEnd() {
+    this.canvasGrid.continue();
   }
 
   /* Render function will be called every time canvas needs update (such as after drag and zoom). */
