@@ -152,12 +152,10 @@ export default class MassMarksDrawer {
 
     /* Update canvas options if options is not empty. */
     if (Object.keys(canvasNewOptions).length !== 0) {
+      /** Raw radius should be kept in this.options,
+       * and the processed radius delivered to pointRender */
       this.pointRender.setOptions(canvasNewOptions);
     }
-
-    /** Raw radius should be kept in this.options,
-     * and the processed radius delivered to pointRender */
-    this.pointRender.setOptions(canvasNewOptions);
 
     this.options = {
       map,
