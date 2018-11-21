@@ -2,13 +2,15 @@ import { MassMarks as MassMarks2D } from 'canvous';
 import {
   convertToXy, getDistance,
 } from '../utils/utils';
+
 const invariant = require('invariant');
 
 export default class MassMarksDrawer {
   constructor(options) {
     const {
-      map, data,
+      map, data, useKd, layer, height, width, radius,
     } = options;
+    const AMap = window.AMap;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     invariant(
@@ -25,8 +27,31 @@ export default class MassMarksDrawer {
 
     /** Extract globally to avoid recalculation */
     this.ctx = ctx;
-    this.zoom = 3;
-    this.render();
+    AMap.plugin('AMap.CustomLayer', () => {
+      this.pointRender = new MassMarks2D(ctx, {
+        data,
+        useKd,
+        layer,
+        radius,
+        coordinateTransformation: (point) => {
+          const { fillColor, radius: pRadius } = point;
+          const newPoint = convertToXy(map, point);
+          return { ...newPoint, fillColor, radius: pRadius };
+        },
+        /** Radius is fixed or not is unRelevant to unit */
+        distance: getDistance,
+        dimension: ['lat', 'lng'],
+      });
+
+      this.customLayer = new AMap.CustomLayer(canvas, {
+        zIndex: 12,
+        zooms: [3, 18],
+      });
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.customLayer.render = this.render.bind(this);
+      this.customLayer.setMap(map);
+    });
 
     /** Stop rendering when dragging for it will cause disturbance */
     map.on('dragging', this.listenDragging, this);
@@ -39,28 +64,120 @@ export default class MassMarksDrawer {
    * Filter map, events, should not transfer to MassMarks2D
    * */
   setOption(options) {
-    /* Radius is get every time map renders  */
-    const { radius, isFixedRadius, ...rest } = options;
-    /* Keep a copy for AMap render  */
-    Object.assign(this.options, options);
-    const { ctx, canvas } = this;
-    /* When props change but map not move or zoom */
-    if (radius !== undefined) {
-      let pointRadius = radius;
-      if (typeof radius === 'function') {
-        pointRadius = radius(this.map);
-      } else if (!isFixedRadius) {
-        pointRadius = radius / this.map.getResolution();
+    const {
+      map = this.options.map,
+      layer = this.options.layer,
+      data = this.options.layer,
+      radius = this.options.radius,
+      useKd = this.options.useKd,
+      onClick = this.options.onClick,
+      onHover = this.options.onHover,
+      isFixedRadius = this.options.isFixedRadius,
+      fillColor = this.options.fillColor,
+      zIndex = this.options.zIndex,
+      width = this.options.width,
+      height = this.options.height,
+    } = options;
+
+    /* Save differential options only. */
+    const canvasNewOptions = {};
+
+    /* If it is true, render function will be called to perform a re-render. */
+    let shouldReRender = false;
+
+    /**
+     * Combine changed option props that will cause reRender together.
+     * */
+    const optionShouldRender = (key, newProp) => {
+      const lastProp = this.options[key];
+      if (lastProp !== newProp) {
+        canvasNewOptions[key] = newProp;
+        shouldReRender = true;
       }
-      pointRadius = Math.ceil(pointRadius);
-      rest.radius = pointRadius;
+    };
+
+    optionShouldRender('layer', layer);
+    optionShouldRender('data', data);
+    optionShouldRender('radius', radius);
+    optionShouldRender('useKd', useKd);
+    optionShouldRender('isFixedRadius', isFixedRadius);
+    optionShouldRender('fillColor', fillColor);
+
+    if (isFixedRadius !== this.options.isFixedRadius) {
+      shouldReRender = true;
     }
-    canvas.width = canvas.width;
-    /* Size change will loss context info */
-    ctx.fillStyle = this.options.fillColor;
+
+    if (height !== this.options.height) {
+      this.canvas.height = height;
+      shouldReRender = true;
+    }
+
+    if (width !== this.options.width) {
+      this.canvas.width = width;
+      shouldReRender = true;
+    }
+
+    if (zIndex !== this.options.zIndex) {
+      this.customLayer.setzIndex(zIndex);
+      shouldReRender = true;
+    }
+
+    /**
+     * Radius and isFixed are relative;
+     * */
+    if (radius !== this.options.radius || isFixedRadius !== this.options.isFixedRadius) {
+      if (radius !== undefined) {
+        let pointRadius = radius;
+        if (typeof radius === 'function') {
+          pointRadius = radius(this.map);
+        } else if (!isFixedRadius) {
+          pointRadius = radius / this.map.getResolution();
+        }
+        pointRadius = Math.ceil(pointRadius);
+        canvasNewOptions.radius = pointRadius;
+      } else {
+        canvasNewOptions.radius = undefined;
+      }
+      shouldReRender = true;
+    }
+
+    if (map !== this.options.map) {
+      this.customLayer.setMap(map);
+      /**
+       * It might be not neccessary to call re-render function
+       * because setMap will perform re-render automatically
+       */
+      shouldReRender = false;
+    }
+
+    /* Update canvas options if options is not empty. */
+    if (Object.keys(canvasNewOptions).length !== 0) {
+      this.pointRender.setOptions(canvasNewOptions);
+    }
+
     /** Raw radius should be kept in this.options,
      * and the processed radius delivered to pointRender */
-    this.pointRender.setOptions(rest);
+    this.pointRender.setOptions(canvasNewOptions);
+
+    this.options = {
+      map,
+      layer,
+      data,
+      radius,
+      useKd,
+      onClick,
+      onHover,
+      isFixedRadius,
+      fillColor,
+      zIndex,
+      width,
+      height,
+    };
+
+    /* Perform re-render. */
+    if (shouldReRender) {
+      this.render();
+    }
   }
 
   /** Remove events and remove custom layer */
@@ -118,7 +235,8 @@ export default class MassMarksDrawer {
   getNearestPoint = (point) => {
     const { lnglat } = point;
     let nearestPoint;
-    let { radius, isFixedRadius } = this.options;
+    let { radius } = this.options;
+    const { isFixedRadius } = this.options;
     /** If point in lng-lat, but radius is fixed,
      * px should transform to actual distance.
      * 2x range
@@ -140,72 +258,30 @@ export default class MassMarksDrawer {
     return nearestPoint;
   }
 
-  /** ReInit renderer */
-  render() {
-    const AMap = window.AMap;
-    const { map, canvas, ctx, options } = this;
-    let { customLayer } = this;
-    const { speed, useKd, layer, data = [] } = options;
-
-    /** Will unMount last MassRender */
-    if (this.pointRender) {
-      this.pointRender.pause();
+  render = () => {
+    const size = this.map.getSize();
+    const { canvas, ctx } = this;
+    const { height, width } = size;
+    const { radius, fillColor, isFixedRadius } = this.options;
+    let pointRadius = radius;
+    if (typeof radius === 'function') {
+      pointRadius = radius(this.map);
+    } else if (!isFixedRadius) {
+      /* Int renders faster than float */
+      pointRadius = Math.ceil(radius / this.map.getResolution());
     }
-
-    AMap.plugin('AMap.CustomLayer', () => {
-      this.pointRender = new MassMarks2D(ctx, {
-        data,
-        speed,
-        useKd,
-        layer,
-        pointConverter: (point) => {
-          const { fillColor, radius } = point;
-          const newPoint = convertToXy(map, point);
-          return { ...newPoint, fillColor, radius };
-        },
-        /** Radius is fixed or not is unRelevant to unit */
-        distance: getDistance,
-        dimension: ['lat', 'lng'],
+    /* TODO: change compare method */
+    if (pointRadius !== this.pointRender.options.radius) {
+      this.pointRender.setOptions({
+        radius: pointRadius,
       });
-
-      if (!customLayer) {
-        customLayer = new AMap.CustomLayer(canvas, {
-          zIndex: 12,
-          zooms: [3, 18],
-        });
-        this.customLayer = customLayer;
-      }
-
-      /**
-       * Reset zoom, canvas size, fillStyle
-       * calculate latest pointRadius
-       * */
-      customLayer.render = ({ size, W }) => {
-        const { height, width } = size;
-        const { zoom } = W;
-        this.zoom = zoom;
-        const { radius, fillColor, isFixedRadius } = this.options;
-        let pointRadius = radius;
-        if (typeof radius === 'function') {
-          pointRadius = radius(this.map);
-        } else if (!isFixedRadius) {
-            /* Int renders faster than float */
-            pointRadius = Math.ceil(radius / this.map.getResolution());
-          }
-        if (pointRadius !== this.pointRender.$$radius) {
-          this.pointRender.setOptions({
-            radius: pointRadius,
-          });
-        }
-        canvas.width = width;
-        canvas.height = height;
-        ctx.clearRect(0, 0, width, height);
-        if (fillColor) {
-          ctx.fillStyle = fillColor;
-        }
-        this.pointRender.render();
-      };
-      customLayer.setMap(map);
-    });
-  }
+    }
+    canvas.width = width;
+    canvas.height = height;
+    ctx.clearRect(0, 0, width, height);
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+    }
+    this.pointRender.render();
+  };
 }
