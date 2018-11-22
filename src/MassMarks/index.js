@@ -8,7 +8,14 @@ const invariant = require('invariant');
 export default class MassMarksDrawer {
   constructor(options) {
     const {
-      map, data, useKd, layer, height, width, radius,
+      map,
+      data,
+      useKd,
+      layer,
+      height,
+      width,
+      radius = 1,
+      opacity = 1,
     } = options;
     const AMap = window.AMap;
     const canvas = document.createElement('canvas');
@@ -33,6 +40,7 @@ export default class MassMarksDrawer {
         useKd,
         layer,
         radius,
+        opacity,
         coordinateTransformation: (point) => {
           const { fillColor, radius: pRadius } = point;
           const newPoint = convertToXy(map, point);
@@ -70,6 +78,7 @@ export default class MassMarksDrawer {
       data = this.options.layer,
       radius = this.options.radius,
       useKd = this.options.useKd,
+      opacity = this.options.opacity,
       onClick = this.options.onClick,
       onHover = this.options.onHover,
       isFixedRadius = this.options.isFixedRadius,
@@ -114,6 +123,11 @@ export default class MassMarksDrawer {
 
     if (width !== this.options.width) {
       this.canvas.width = width;
+      shouldReRender = true;
+    }
+
+    if (opacity !== this.options.opacity) {
+      this.customLayer.setOpacity(opacity);
       shouldReRender = true;
     }
 
