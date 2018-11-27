@@ -40,7 +40,6 @@ export default class MassMarksDrawer {
         useKd,
         layer,
         radius,
-        opacity,
         coordinateTransformation: (point) => {
           const { fillColor, radius: pRadius } = point;
           const newPoint = convertToXy(map, point);
@@ -53,6 +52,7 @@ export default class MassMarksDrawer {
 
       this.customLayer = new AMap.CustomLayer(canvas, {
         zIndex: 12,
+        opacity,
         zooms: [3, 18],
       });
       this.canvas.width = width;
