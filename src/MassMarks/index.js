@@ -16,6 +16,7 @@ export default class MassMarksDrawer {
       width,
       radius = 1,
       opacity = 1,
+      blendMode = 'source-over',
     } = options;
     const AMap = window.AMap;
     const canvas = document.createElement('canvas');
@@ -74,6 +75,7 @@ export default class MassMarksDrawer {
   setOption(options) {
     const {
       map = this.options.map,
+      blendMode = this.options.blendMode,
       layer = this.options.layer,
       data = this.options.layer,
       radius = this.options.radius,
@@ -106,6 +108,7 @@ export default class MassMarksDrawer {
     };
 
     optionShouldRender('layer', layer);
+    optionShouldRender('blendMode', blendMode);
     optionShouldRender('data', data);
     optionShouldRender('radius', radius);
     optionShouldRender('useKd', useKd);
@@ -184,6 +187,7 @@ export default class MassMarksDrawer {
       zIndex,
       width,
       height,
+      blendMode,
     };
 
     /* Perform re-render. */
@@ -274,7 +278,7 @@ export default class MassMarksDrawer {
     const size = this.map.getSize();
     const { canvas, ctx } = this;
     const { height, width } = size;
-    const { radius, fillColor, isFixedRadius } = this.options;
+    const { radius, fillColor, isFixedRadius, blendMode } = this.options;
     let pointRadius = radius;
     if (typeof radius === 'function') {
       pointRadius = radius(this.map);
@@ -294,6 +298,7 @@ export default class MassMarksDrawer {
     if (fillColor) {
       ctx.fillStyle = fillColor;
     }
+    ctx.globalCompositeOperation = blendMode;
     this.pointRender.render();
   };
 }
