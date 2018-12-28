@@ -10,6 +10,7 @@ export default class MassMarksDrawer {
     const {
       map,
       data,
+      drawer,
       useKd,
       layer,
       height,
@@ -38,6 +39,7 @@ export default class MassMarksDrawer {
     AMap.plugin('AMap.CustomLayer', () => {
       this.pointRender = new MassMarks2D(ctx, {
         data,
+        drawer,
         useKd,
         layer,
         radius,
