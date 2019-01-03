@@ -16,6 +16,7 @@ export default class Arcs {
       strokeColor = 'black',
       opacity = 1,
       width = 0,
+      lazy = true,
       zIndex = 12,
       /* L/R rate */
       rate = 0.5,
@@ -31,6 +32,7 @@ export default class Arcs {
       width,
       zIndex,
       rate,
+      lazy,
       zooms,
       strokeWeight,
       strokeColor,
@@ -45,6 +47,7 @@ export default class Arcs {
     this.canvasArcs = new CanvousArcs(this.ctx, {
       data,
       rate,
+      lazy,
       coordinateTransformation,
     });
 
@@ -80,6 +83,7 @@ export default class Arcs {
       opacity = this.options.opacity,
       width = this.options.width,
       rate = this.options.rate,
+      lazy = this.options.lazy,
       zIndex = this.options.zIndex,
       strokeWeight = this.options.strokeWeight,
       strokeColor = this.options.strokeColor,
@@ -108,6 +112,10 @@ export default class Arcs {
     if (height !== this.options.height) {
       this.canvas.height = height;
       shouldReRender = true;
+    }
+
+    if (lazy !== this.options.lazy) {
+      canvasArcsNewOptions.lazy = lazy;
     }
 
     if (width !== this.options.width) {
@@ -147,6 +155,8 @@ export default class Arcs {
       map,
       opacity,
       width,
+      lazy,
+      rate,
       strokeColor,
       strokeWeight,
       zIndex,
