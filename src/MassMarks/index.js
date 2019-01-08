@@ -44,9 +44,8 @@ export default class MassMarksDrawer {
         layer,
         radius,
         coordinateTransformation: (point) => {
-          const { fillColor, radius: pRadius } = point;
           const newPoint = convertToXy(map, point);
-          return { ...newPoint, fillColor, radius: pRadius };
+          return { ...point, ...newPoint };
         },
         /** Radius is fixed or not is unRelevant to unit */
         distance: getDistance,
