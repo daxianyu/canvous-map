@@ -12,9 +12,9 @@ export function convertToXy(map, sourcePoint) {
   if (!reUseAbleLngLat) {
     reUseAbleLngLat = new window.AMap.LngLat(0, 0);
   }
-  reUseAbleLngLat.O = lng;
+  reUseAbleLngLat.P = lng;
   reUseAbleLngLat.lng = lng;
-  reUseAbleLngLat.P = lat;
+  reUseAbleLngLat.O = lat;
   reUseAbleLngLat.lat = lat;
   return map.lngLatToContainer(reUseAbleLngLat);
 }

@@ -1,6 +1,6 @@
 {
   "name": "canvous-map",
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "description": "Start point for a javascript package",
   "main": "src/index.js",
   "scripts": {
@@ -48,7 +48,7 @@
     ]
   },
   "dependencies": {
-    "canvous": "^1.0.1-alpha.11",
+    "canvous": "^1.0.1-alpha.21",
     "invariant": "^2.2.4"
   }
 }

@@ -1297,10 +1297,10 @@ caniuse-lite@^1.0.30000844:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000865.tgz#70026616e8afe6e1442f8bb4e1092987d81a2f25"
   integrity sha512-vs79o1mOSKRGv/1pSkp4EXgl4ZviWeYReXw60XfacPU64uQWZwJT6vZNmxRF9O+6zu71sJwMxLK5JXxbzuVrLw==
 
-canvous@^1.0.1-alpha.11:
-  version "1.0.1-alpha.15"
-  resolved "https://registry.yarnpkg.com/canvous/-/canvous-1.0.1-alpha.15.tgz#416104247886087fbfb65bc9cb7765b89342c8ac"
-  integrity sha512-/kEbFSO+npQcnofACaG7z3xsOYjrwUBnzay8SvKNzzyfmFNj3/LC6SnLOdRJ+gvkfME9RLCbk13qz2Gj9PsOhQ==
+canvous@^1.0.1-alpha.21:
+  version "1.0.1-alpha.21"
+  resolved "https://registry.yarnpkg.com/canvous/-/canvous-1.0.1-alpha.21.tgz#501f00c890be4d81736eeb7fe75b574bbbbc5d3a"
+  integrity sha512-Ym+ipyxvDnX2wTkFiFAMkixAVMkiCLyRckMyoFURSA8kvcHlqqm7JW4fu65COjhIvmbBb8X5YKjxKPdUnOEebg==
   dependencies:
     kd-tree-javascript "^1.0.3"
 
