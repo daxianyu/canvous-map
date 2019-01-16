@@ -102,11 +102,17 @@ class Common {
   }
 
   /* Remove events and remove custom layer. */
-  destroy() {
+  destroy = () => {
     this.map.off('dragging', this.listenDragging, this);
     this.map.off('dragend', this.listenDragEnd, this);
     this.customLayer.setMap(null);
-  }
+  };
+
+  mount = () => {
+    this.map.on('dragging', this.listenDragging, this);
+    this.map.on('dragend', this.listenDragEnd, this);
+    this.customLayer.setMap(this.map);
+  };
 
   /* Called every time when map view change or props updated */
   render({ size }) {
