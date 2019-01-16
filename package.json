@@ -1,6 +1,6 @@
 {
   "name": "canvous-map",
-  "version": "1.0.0-alpha.15",
+  "version": "1.0.0-alpha.16",
   "description": "Start point for a javascript package",
   "main": "src/index.js",
   "scripts": {
