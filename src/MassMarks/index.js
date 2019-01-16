@@ -18,6 +18,7 @@ export default class MassMarksDrawer {
       radius = 1,
       opacity = 1,
       blendMode = 'source-over',
+      zIndex = 12,
     } = options;
     const AMap = window.AMap;
     const canvas = document.createElement('canvas');
@@ -53,7 +54,7 @@ export default class MassMarksDrawer {
       });
 
       this.customLayer = new AMap.CustomLayer(canvas, {
-        zIndex: 12,
+        zIndex,
         opacity,
         zooms: [3, 18],
       });
