@@ -10,13 +10,11 @@ export default class Grid {
        * It consumes grid bounds and output x and y in pixel.
        */
       coordinateTransformation = createDefaultCoordinateTransformation(options.map),
-      height = 0,
       map,
       lazy,
       onClick,
       opacity = 1,
       useCache = true,
-      width = 0,
       zIndex = 12,
       zooms = [3, 18],
     } = options;
@@ -24,20 +22,16 @@ export default class Grid {
     this.options = {
       data,
       coordinateTransformation,
-      height,
       map,
       lazy,
       onClick,
       opacity,
       useCache,
-      width,
       zIndex,
       zooms,
     };
     /* Create canvas. */
     this.canvas = document.createElement('canvas');
-    this.canvas.height = height;
-    this.canvas.width = width;
     this.ctx = this.canvas.getContext('2d');
     this.map = map;
     /* Create a layer who understands how to draw grids on canvas context. */
@@ -60,8 +54,6 @@ export default class Grid {
        * every time our canvas needs update.
        * 'this' referred to map
        */
-      this.canvas.width = width;
-      this.canvas.height = height;
       this.customLayer.render = this.render.bind(this);
       /* Register customerLayer to map. */
       this.customLayer.setMap(map);
@@ -167,9 +159,9 @@ export default class Grid {
 
     /* Perform re-render. */
     if (shouldReRender) {
-      this.render();
+      this.render(map);
     }
-  }
+  };
 
   /* Remove events and remove custom layer. */
   destroy() {
@@ -196,8 +188,11 @@ export default class Grid {
 
   /* Render function will be called every time canvas needs update (such as after drag and zoom). */
   render() {
-    /* Clear canvas. */
-    this.canvas.width = this.canvas.width;
+    const size = this.map.getSize();
+    /* Clear canvas and resize if map size changed. */
+    this.canvas.width = size.width;
+    this.canvas.height = size.height;
+
     /* Call canvasGrid's render function to draw grids. */
     this.canvasGrid.render();
   }

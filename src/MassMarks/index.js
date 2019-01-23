@@ -13,8 +13,6 @@ export default class MassMarksDrawer {
       drawer,
       useKd,
       layer,
-      height,
-      width,
       radius = 1,
       opacity = 1,
       blendMode = 'source-over',
@@ -58,8 +56,6 @@ export default class MassMarksDrawer {
         opacity,
         zooms: [3, 18],
       });
-      this.canvas.width = width;
-      this.canvas.height = height;
       this.customLayer.render = this.render.bind(this);
       this.customLayer.setMap(map);
     });
@@ -88,8 +84,6 @@ export default class MassMarksDrawer {
       isFixedRadius = this.options.isFixedRadius,
       fillColor = this.options.fillColor,
       zIndex = this.options.zIndex,
-      width = this.options.width,
-      height = this.options.height,
     } = options;
 
     /* Save differential options only. */
@@ -118,16 +112,6 @@ export default class MassMarksDrawer {
     optionShouldRender('fillColor', fillColor);
 
     if (isFixedRadius !== this.options.isFixedRadius) {
-      shouldReRender = true;
-    }
-
-    if (height !== this.options.height) {
-      this.canvas.height = height;
-      shouldReRender = true;
-    }
-
-    if (width !== this.options.width) {
-      this.canvas.width = width;
       shouldReRender = true;
     }
 
@@ -187,8 +171,6 @@ export default class MassMarksDrawer {
       isFixedRadius,
       fillColor,
       zIndex,
-      width,
-      height,
       blendMode,
     };
 
@@ -294,9 +276,9 @@ export default class MassMarksDrawer {
         radius: pointRadius,
       });
     }
+    // Resize and will clear canvas.
     canvas.width = width;
     canvas.height = height;
-    ctx.clearRect(0, 0, width, height);
     if (fillColor) {
       ctx.fillStyle = fillColor;
     }
