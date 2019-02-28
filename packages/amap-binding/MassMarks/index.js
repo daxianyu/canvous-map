@@ -1,7 +1,5 @@
-import { MassMarks as MassMarks2D } from 'canvous';
-import {
-  convertToXy, getDistance,
-} from '../utils/utils';
+import { convertToXy, getDistance } from '../utils/utils';
+import { MassMarks as MassMarks2D } from '../../core';
 
 const invariant = require('invariant');
 

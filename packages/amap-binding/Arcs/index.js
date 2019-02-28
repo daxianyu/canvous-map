@@ -1,21 +1,23 @@
-import { Grid as CanvasGrid } from 'canvous';
-import { createDefaultCoordinateTransformation } from '../utils/utils';
+import { createDefaultCoordinateArrayTransformation } from '../utils/utils';
+import { Arcs as CanvousArcs } from '../../core';
 
-export default class Grid {
+export default class Arcs {
   constructor(options) {
     const {
       data = [],
       /**
        * Coordinate transformation function.
-       * It consumes grid bounds and output x and y in pixel.
+       * It consumes output x and y in pixel.
        */
-      coordinateTransformation = createDefaultCoordinateTransformation(options.map),
+      coordinateTransformation = createDefaultCoordinateArrayTransformation(options.map),
       map,
-      lazy,
-      onClick,
+      strokeWeight = 1,
+      strokeColor = 'black',
       opacity = 1,
-      useCache = true,
+      lazy = true,
       zIndex = 12,
+      /* L/R rate */
+      rate = 0.5,
       zooms = [3, 18],
     } = options;
 
@@ -23,24 +25,26 @@ export default class Grid {
       data,
       coordinateTransformation,
       map,
-      lazy,
-      onClick,
       opacity,
-      useCache,
       zIndex,
+      rate,
+      lazy,
       zooms,
+      strokeWeight,
+      strokeColor,
     };
+
     /* Create canvas. */
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
     this.map = map;
-    /* Create a layer who understands how to draw grids on canvas context. */
-    this.canvasGrid = new CanvasGrid(this.ctx, {
-      coordinateTransformation,
+    this.canvasArcs = new CanvousArcs(this.ctx, {
       data,
-      useCache,
+      rate,
       lazy,
+      coordinateTransformation,
     });
+
     /* Inject CustomLayer plugin. */
     window.AMap.plugin('AMap.CustomLayer', () => {
       /* Create AMap custom layer with our canvas. */
@@ -58,34 +62,25 @@ export default class Grid {
       /* Register customerLayer to map. */
       this.customLayer.setMap(map);
     });
-
-    /* Stop rendering when dragging because it will cause disturbance. */
-    map.on('click', this.handleClick, this);
     map.on('dragging', this.listenDragging, this);
     map.on('dragend', this.listenDragEnd, this);
   }
 
-  /**
-   * Expose this funtion to change Grid UI and behaviours.
-   */
   setOptions = (options) => {
     const {
       data = this.options.data,
       coordinateTransformation = this.options.coordinateTransformation,
-      height = this.options.height,
       map = this.options.map,
-      lazy = this.options.lazy,
-      onClick = this.options.onClick,
       opacity = this.options.opacity,
-      useCache = this.options.useCache,
-      width = this.options.width,
+      rate = this.options.rate,
+      lazy = this.options.lazy,
       zIndex = this.options.zIndex,
-      /* There is no api to update zooms  */
-      /* zooms = this.options.zooms, */
+      strokeWeight = this.options.strokeWeight,
+      strokeColor = this.options.strokeColor,
     } = options;
 
     /* Save differential options only. */
-    const canvasGridNewOptions = {};
+    const canvasArcsNewOptions = {};
     /* If it is true, render function will be called to perform a re-render. */
     let shouldReRender = false;
 
@@ -95,28 +90,17 @@ export default class Grid {
     const optionShouldRender = (key, newProp) => {
       const lastProp = this.options[key];
       if (lastProp !== newProp) {
-        canvasGridNewOptions[key] = newProp;
+        canvasArcsNewOptions[key] = newProp;
         shouldReRender = true;
       }
     };
-
+    optionShouldRender('rate', rate);
     optionShouldRender('data', data);
-    optionShouldRender('useCache', useCache);
-    optionShouldRender('coordinateTransformation', coordinateTransformation);
+    optionShouldRender('strokeColor', strokeColor);
+    optionShouldRender('strokeWeight', strokeWeight);
 
-    /* Lazy Change will not cause reRender force */
     if (lazy !== this.options.lazy) {
-      canvasGridNewOptions.lazy = lazy;
-    }
-
-    if (height !== this.options.height) {
-      this.canvas.height = height;
-      shouldReRender = true;
-    }
-
-    if (width !== this.options.width) {
-      this.canvas.width = width;
-      shouldReRender = true;
+      canvasArcsNewOptions.lazy = lazy;
     }
 
     if (opacity !== this.options.opacity) {
@@ -138,62 +122,53 @@ export default class Grid {
       shouldReRender = false;
     }
 
-    /* Update canvas grid options if options is not empty. */
-    if (Object.keys(canvasGridNewOptions).length !== 0) {
-      this.canvasGrid.setOptions(canvasGridNewOptions);
+    /* Update canvas options if options is not empty. */
+    if (Object.keys(canvasArcsNewOptions).length !== 0) {
+      this.canvasArcs.setOptions(canvasArcsNewOptions);
     }
 
     /* Save new options. Before render */
     this.options = {
       data,
       coordinateTransformation,
-      height,
       map,
-      lazy,
-      onClick,
       opacity,
-      useCache,
-      width,
+      lazy,
+      rate,
+      strokeColor,
+      strokeWeight,
       zIndex,
     };
 
     /* Perform re-render. */
     if (shouldReRender) {
-      this.render(map);
+      this.render();
     }
   };
+
+  /** Stop rendering when mouse dragging */
+  listenDragging() {
+    this.canvasArcs.pause();
+  }
+
+  listenDragEnd() {
+    this.canvasArcs.continue();
+  }
 
   /* Remove events and remove custom layer. */
   destroy() {
     this.map.off('dragging', this.listenDragging, this);
     this.map.off('dragend', this.listenDragEnd, this);
-    this.map.off('click', this.handleClick, this);
     this.customLayer.setMap(null);
   }
 
-  /* Look for grids that has been clicked. */
-  handleClick(point) {
-    if (!this.options.onClick) return;
-    this.canvasGrid.findGridsContainPoint(point.pixel, this.options.onClick);
-  }
-
-  /** Stop rendering when mouse dragging */
-  listenDragging() {
-    this.canvasGrid.pause();
-  }
-
-  listenDragEnd() {
-    this.canvasGrid.continue();
-  }
-
-  /* Render function will be called every time canvas needs update (such as after drag and zoom). */
+  /* Called every time when map view change or props updated */
   render() {
-    const size = this.map.getSize();
-    /* Clear canvas and resize if map size changed. */
-    this.canvas.width = size.width;
-    this.canvas.height = size.height;
-
-    /* Call canvasGrid's render function to draw grids. */
-    this.canvasGrid.render();
+    const { width, height } = this.map.getSize();
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.ctx.lineWidth = this.options.strokeWeight;
+    this.ctx.strokeStyle = this.options.strokeColor;
+    this.canvasArcs.render();
   }
 }
