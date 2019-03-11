@@ -7,7 +7,7 @@ document.head.appendChild(style);
  * as parent layer;
  */
 class Layer {
-  constructor(canvas, options) {
+  constructor(options = {}) {
     const {
       zIndex = '1',
       opacity = '1',
@@ -15,6 +15,7 @@ class Layer {
       zoom = 1,
     } = options;
     const wrapper = document.createElement('div');
+    const canvas = document.createElement('canvas');
     wrapper.classList.add('multi-custom-layer');
     wrapper.style.zIndex = zIndex;
     wrapper.style.opacity = opacity;
@@ -28,6 +29,10 @@ class Layer {
     this.root = wrapper;
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+  }
+
+  getCtx() {
+    return this.canvas.getContext('2d');
   }
 
   getSize() {
@@ -58,12 +63,16 @@ class Layer {
  * providing events proxy ability.
  */
 class MultiLayer {
-  constructor(container, {
-    width, height,
-  }) {
+  constructor(container, options = {}) {
+    const { width, height } = options;
     this.root = container;
-    container.style.height = `${height}px`;
-    container.style.width = `${width}px`;
+    container.style.position = 'relative';
+    if (width) {
+      container.style.width = `${width}px`;
+    }
+    if (height) {
+      container.style.height = `${height}px`;
+    }
     this.root.addEventListener('click', this.eventHandler('click'));
     this.root.addEventListener('mousemove', this.eventHandler('mousemove'));
   }
