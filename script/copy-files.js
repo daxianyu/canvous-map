@@ -10,7 +10,7 @@ async function copyFile(file) {
   if (ENV === 'production') {
     buildPath = path.resolve(__dirname, '../build/', path.basename(file));
   } else {
-    buildPath = path.resolve(__dirname, '../demo/node_modules/js-component-seed/', path.basename(file));
+    buildPath = path.resolve(__dirname, '../demo/node_modules/canvous-map/', path.basename(file));
   }
 
   console.log(`Copying ${file} to ${buildPath}`);
@@ -25,10 +25,10 @@ async function copyFile(file) {
 
 async function createPackageFile() {
   const packageData = await fse.readFile(path.resolve(__dirname, '../package.json'), 'utf8');
+
   const {scripts, devDependencies, jest, ...packageDataOther } = JSON.parse(
     packageData,
   );
-
   const newPackageData = {
     ...packageDataOther,
     main: './index.js',
@@ -40,7 +40,7 @@ async function createPackageFile() {
   if (ENV === 'production') {
     buildPath = path.resolve(__dirname, '../build/package.json');
   } else {
-    buildPath = path.resolve(__dirname, '../demo/node_modules/js-component-seed/package.json');
+    buildPath = path.resolve(__dirname, '../demo/node_modules/canvous-map/package.json');
   }
 
   await fse.writeFile(buildPath, JSON.stringify(newPackageData, null, 2), 'utf8');
