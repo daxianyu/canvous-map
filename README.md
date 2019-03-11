@@ -35,10 +35,7 @@ const multiLayer = new MultiLayer(container, {
 multiLayer.addLayer(layer);
 ```
 ### MultiLayer 类
-#### 多图层控制
-| 构造函数 | 说明 |
-| ---- | ---- |
-| new MultiLayer(container, {height: 700,width: 700,}) | 构造一个多图层，负责管理多个图层，将他们叠加在一起。 |
+#### 构造一个多图层，负责管理多个图层，将他们叠加在一起。
 
 | 方法 | 说明 |
 | ---- | ---- |
@@ -51,10 +48,6 @@ multiLayer.addLayer(layer);
 
 ### Layer 类
 #### 在多图层中的每个单图层
-| 构造函数 | 说明 |
-| ---- | ---- |
-|const layer = new Layer({ fitSize }); |  |
-
 | 方法 | 说明 |
 | ---- | ---- |
 | constructor({ zIndex, opacity, fitSize, zoom }) | zIndex: 层index, opacity: 透明度, fitSize: 是否自动适应, zoom: 缩放 |
