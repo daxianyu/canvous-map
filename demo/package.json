@@ -15,7 +15,9 @@
   "author": "Marco",
   "license": "MIT",
   "jest": {
-    "roots": ["<rootDir>/src/"]
+    "roots": [
+      "<rootDir>/src/"
+    ]
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0"
