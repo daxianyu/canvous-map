@@ -115,8 +115,8 @@ class Common {
   };
 
   /* Called every time when map view change or props updated */
-  render({ size }) {
-    const { width, height } = size;
+  render() {
+    const { width, height } = this.map.getSize();;
     if (this.canvas.width !== width) {
       this.canvas.width = width;
     }
